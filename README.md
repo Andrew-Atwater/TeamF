@@ -10,9 +10,12 @@ MEMBERS:
 6) Alex Picard (Developer #4)
 
 WEEKLY MEETING TIMES: 
-1) After class on Tuesdays (4:45PM) in Ferland Hall.
-2) Saturday afternoons (1:00PM) at Fogler Library.
-Team members are expected to attend all meetings unless discussed otherwise. 
+1) After class on Tuesdays (4:45-5:45PM) in Ferland Hall.
+2) Saturday afternoons (1:00-2:00PM) at Fogler Library.
+Team members are expected to attend all meetings unless discussed otherwise.
+
+SYNCHRONOUS DEVELOPMENT TIME: This will usually be held on Saturday afternoons after our meeting (2:00-3:00PM) as needed to stay on track with the project. 
+If necessary, this could also be held on a weeknight (this would always be discussed in advance). 
 
 COMMUNICATION POLICY: 
 We will primarily use our texting group chat for communication, and our team discord channel as needed for sending documents, etc.
