@@ -12,7 +12,7 @@ MEMBERS:
 WEEKLY MEETING TIMES: 
 1) After class on Tuesdays (4:45-5:45PM) in Ferland Hall.
 2) Saturday afternoons (1:00-2:00PM) at Fogler Library.
-Team members are expected to attend all meetings unless discussed otherwise.
+Team members are expected to attend all meetings unless discussed otherwise, and notes will be kept for each meeting to keep everyone on track in case someone misses a meeting.
 
 SYNCHRONOUS DEVELOPMENT TIME: This will usually be held on Saturday afternoons after our meeting (2:00-3:00PM) as needed to stay on track with the project. 
 If necessary, this could also be held on a weeknight (this would always be discussed in advance). 
@@ -21,6 +21,7 @@ COMMUNICATION POLICY:
 We will primarily use our texting group chat for communication, and our team discord channel as needed for sending documents, etc.
 Team members are expected to reply to all messages intended for them within 24 hours on business days, 
 and are strongly encouraged to reply to any other messages in the group chat where they have useful ideas or suggestions. 
+Project manager will send out a meeting agenda at least a day before each scheduled meeting. 
 
 PROBLEM STATEMENT #1:
 Every year, thousands of UMaine students are faced with financial dilemmas. For example, should I stay on campus or find off campus housing? Should I buy a meal plan or buy groceries and cook for myself? How do I manage my budget and account for payment due dates / biweekly deposits for income? 
