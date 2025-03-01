@@ -23,6 +23,15 @@ Team members are expected to reply to all messages intended for them within 24 h
 and are strongly encouraged to reply to any other messages in the group chat where they have useful ideas or suggestions. 
 Project manager will send out a meeting agenda at least a day before each scheduled meeting. 
 
+QUALITY CHECK POLICY:
+All tasks should be given a “quality check” due date in the Kanban team. 
+Quality check due dates should always be set to, at the latest, the start time of the sprint review meeting.
+The sprint review meeting should take place, at a minimum, 48 hours before the actual due date. 
+This will give everyone enough time to finish up if there are any unforeseen problems or delays, or if any team member is unable to finish their part of the sprint due to an emergency and their work needs to be reassigned. 
+Ideally, team members should start working on the sprint as soon as possible after the work is divided up into individual tasks. This will allow for sufficient time for collaboration with other team members if there are any problems, and help avoid last minute scrambles. 
+All written portions of a sprint should be proofread by at least one other team member, because writing can always be improved. 
+At the sprint review meeting, multiple team members should make sure each new feature of the project works as intended, and if not, create a plan for completion by the actual deadline. 
+
 PROBLEM STATEMENT #1:
 Every year, thousands of UMaine students are faced with financial dilemmas. For example, should I stay on campus or find off campus housing? Should I buy a meal plan or buy groceries and cook for myself? How do I manage my budget and account for payment due dates / biweekly deposits for income? 
 
