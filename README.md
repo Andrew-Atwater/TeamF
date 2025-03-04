@@ -1,6 +1,12 @@
 # TeamF (Team Farhan)
 COS420 Financial Organization Project
 
+Starting the environment:
+git clone https://github.com/Andrew-Atwater/TeamF.git
+*cd into financial-planner directory*
+npm install
+npm start
+
 MEMBERS:
 1) Adam Bendetson (Project Manager)
 2) Farhan Omane (Designer)
