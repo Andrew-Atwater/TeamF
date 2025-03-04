@@ -41,7 +41,7 @@ const Home: React.FC = () => {
     },
     {
       name: 'Credit Card',
-      balance: -750.25,
+      balance: -740.25,
       dueDate: '2024-03-15'
     },
     {
