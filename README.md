@@ -2,10 +2,14 @@
 COS420 Financial Organization Project
 
 Starting the environment:
-1) git clone https://github.com/Andrew-Atwater/TeamF.git
-2) *cd into financial-planner directory*
-3) npm install
-4) npm start
+1) Open VScode or cmd and get into a command prompt
+2) Create a new directory such as *mkdir cos420project*
+3) Change into directory using cd. Such as *cd cos420project*
+4) Clone this directory. *git clone https://github.com/Andrew-Atwater/TeamF.git*
+5) Change into the TeamF directory. *cd TeamF*
+6) Change into the financial-planner directory. *cd financial-planner*
+7) Install all the required dependencies. *npm install* -- May take a few minutes
+8) Once everything is install run the code using npm. *npm start* -- May take a few minutes to start
 
 MEMBERS:
 1) Adam Bendetson (Project Manager)
