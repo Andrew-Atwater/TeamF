@@ -18,6 +18,9 @@ MEMBERS:
 KANBAN CHART:
 https://app.worklenz.com/worklenz/projects/dc561aac-27a0-44bf-a70a-ffdb54e8f674?tab=tasks-list&pinned_tab=tasks-list
 
+SYSTEM REQUIREMENT SPECIFICATION DOCUMENT:
+https://docs.google.com/document/d/1bMdSQifJXM5QYvslw5x0TamEnEZmEueSToP99LMPEZM/edit?tab=t.0
+
 WEEKLY MEETING TIMES: 
 1) After class on Tuesdays (4:45-5:45PM) in Ferland Hall.
 2) Saturday afternoons (1:00-2:00PM) at Fogler Library.
