@@ -2,10 +2,10 @@
 COS420 Financial Organization Project
 
 Starting the environment:
-git clone https://github.com/Andrew-Atwater/TeamF.git
-*cd into financial-planner directory*
-npm install
-npm start
+1) git clone https://github.com/Andrew-Atwater/TeamF.git
+2) *cd into financial-planner directory*
+3) npm install
+4) npm start
 
 MEMBERS:
 1) Adam Bendetson (Project Manager)
