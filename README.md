@@ -25,7 +25,7 @@ https://app.worklenz.com/worklenz/projects/dc561aac-27a0-44bf-a70a-ffdb54e8f674?
 SYSTEM REQUIREMENT SPECIFICATION DOCUMENT:
 https://docs.google.com/document/d/1bMdSQifJXM5QYvslw5x0TamEnEZmEueSToP99LMPEZM/edit?tab=t.0
 
-non-functional requirements/functional requirements document:
+NON-FUNCTIONAL/FUNCTIONAL REQUIREMENTS DOCUMENT:
 https://docs.google.com/document/d/1O-iKiveWH0owMYvlDRei5z7f5wiFRJXMLq1TQ0pnisY/edit?tab=t.0
 
 WEEKLY MEETING TIMES: 
