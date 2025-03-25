@@ -1,6 +1,16 @@
 # TeamF (Team Farhan)
 COS420 Financial Organization Project
 
+Starting the environment:
+1) Open VScode or cmd and get into a command prompt
+2) Create a new directory such as *mkdir cos420project*
+3) Change into directory using cd. Such as *cd cos420project*
+4) Clone this directory. *git clone https://github.com/Andrew-Atwater/TeamF.git*
+5) Change into the TeamF directory. *cd TeamF*
+6) Change into the financial-planner directory. *cd financial-planner*
+7) Install all the required dependencies. *npm install* -- May take a few minutes
+8) Once everything is install run the code using npm. *npm start* -- May take a few minutes to start
+
 MEMBERS:
 1) Adam Bendetson (Project Manager)
 2) Farhan Omane (Designer)
@@ -8,6 +18,18 @@ MEMBERS:
 4) Ryan Brown (Developer #2)
 5) Andrew Atwater (Developer #3)
 6) Alex Picard (Developer #4)
+
+KANBAN CHART:
+https://app.worklenz.com/worklenz/projects/dc561aac-27a0-44bf-a70a-ffdb54e8f674?tab=tasks-list&pinned_tab=tasks-list
+
+SYSTEM REQUIREMENT SPECIFICATION DOCUMENT:
+https://docs.google.com/document/d/1bMdSQifJXM5QYvslw5x0TamEnEZmEueSToP99LMPEZM/edit?tab=t.0
+
+NON-FUNCTIONAL/FUNCTIONAL REQUIREMENTS DOCUMENT:
+https://docs.google.com/document/d/1O-iKiveWH0owMYvlDRei5z7f5wiFRJXMLq1TQ0pnisY/edit?tab=t.0
+
+SYSTEM ARCHITECTURE DESIGN DOCUMENT:
+https://docs.google.com/document/d/1hPAy1oTMAwuhAp08_11dK2DpYicO5mMK90aq0h6dyes/edit?tab=t.0
 
 WEEKLY MEETING TIMES: 
 1) After class on Tuesdays (4:45-5:45PM) in Ferland Hall.
@@ -22,6 +44,9 @@ We will primarily use our texting group chat for communication, and our team dis
 Team members are expected to reply to all messages intended for them within 24 hours on business days, 
 and are strongly encouraged to reply to any other messages in the group chat where they have useful ideas or suggestions. 
 Project manager will send out a meeting agenda at least a day before each scheduled meeting. 
+
+PLANNED ABSENCE POLICY:
+In the event that the project manager will be absent for multiple days, he let the team know as soon as the circumstances are known and [___] will take over as the Interim Project Manager during the absence. In the event that a developer or designer will be absent for multiple days, they will let the team know as soon as the circumstances are known and ask for assistance on their tasks if necessary.
 
 QUALITY CHECK POLICY:
 All tasks should be given a “quality check” due date in the Kanban team. 
