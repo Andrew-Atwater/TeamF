@@ -49,7 +49,7 @@ and are strongly encouraged to reply to any other messages in the group chat whe
 Project manager will send out a meeting agenda at least a day before each scheduled meeting. 
 
 PLANNED ABSENCE POLICY:
-In the event that the project manager will be absent for multiple days, he let the team know as soon as the circumstances are known and [___] will take over as the Interim Project Manager during the absence. In the event that a developer or designer will be absent for multiple days, they will let the team know as soon as the circumstances are known and ask for assistance on their tasks if necessary.
+In the event that the project manager (Adam) will be absent for multiple days, he let the team know as soon as the circumstances are known and Alex will take over as the Interim Project Manager during the absence. In the event that a developer or designer will be absent for multiple days, they will let the team know as soon as the circumstances are known and ask for assistance on their tasks if necessary.
 
 QUALITY CHECK POLICY:
 All tasks should be given a “quality check” due date in the Kanban team. 
