@@ -9,7 +9,8 @@ Starting the environment:
 5) Change into the TeamF directory. *cd TeamF*
 6) Change into the financial-planner directory. *cd financial-planner*
 7) Install all the required dependencies. *npm install* -- May take a few minutes
-8) Once everything is install run the code using npm. *npm start* -- May take a few minutes to start
+8) Using https://video.maine.edu/media/Setting%20Up%20Firebase/1_0kgpvmqm, set up a firebase-config.tsx following the layout in the firebase-config.tsx.disp file.
+9) Once everything is install run the code using npm. *npm start* -- May take a few minutes to start
 
 MEMBERS:
 1) Adam Bendetson (Project Manager)
