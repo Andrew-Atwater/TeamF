@@ -1,6 +1,8 @@
 # TeamF (Team Farhan)
 COS420 Financial Organization Project
 
+https://farhan-financial-planner.web.app/
+
 Starting the environment:
 1) Open VScode or cmd and get into a command prompt
 2) Create a new directory such as *mkdir cos420project*
