@@ -11,8 +11,14 @@ Starting the environment:
 5) Change into the TeamF directory. *cd TeamF*
 6) Change into the financial-planner directory. *cd financial-planner*
 7) Install all the required dependencies. *npm install* -- May take a few minutes
-8) Using https://video.maine.edu/media/Setting%20Up%20Firebase/1_0kgpvmqm, set up a firebase-config.tsx following the layout in the firebase-config.tsx.disp file.
-9) Once everything is install run the code using npm. *npm start* -- May take a few minutes to start
+8) Using https://video.maine.edu/media/Setting%20Up%20Firebase/1_0kgpvmqm, set up a firebase-config.tsx following the layout in the firebase-config.tsx.disp file. *Make sure to select the firebase database and authenticator emulators for local machines*
+9) Choose either to host on the local machine or the web
+10.1a) *local machine*
+10.2a) Start the firebase emulators. *firebase emulators:start*
+10.3a)Use *npm start* -- It may take a few minutes, but can access the webpage from the browser using localhost:3000
+10.1b) *web hosting*
+10.2b) Run production build. *npm run build*
+10.3b) Deploy the webpage. *firebase deploy* 
 
 MEMBERS:
 1) Adam Bendetson (Project Manager)
