@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   AppBar, 
   Toolbar, 
@@ -13,7 +13,11 @@ import {
   Card, 
   CardContent, 
   Box,
-  Divider
+  Divider,
+  Button,
+  Avatar,
+  Menu,
+  MenuItem
 } from '@mui/material';
 import { 
   Menu as MenuIcon, 
@@ -22,11 +26,28 @@ import {
   BarChart as BarChartIcon, 
   AccountBalance as AccountBalanceIcon, 
   Settings as SettingsIcon, 
-  Close as CloseIcon
+  Close as CloseIcon,
+  Login as LoginIcon,
+  Logout as LogoutIcon
 } from '@mui/icons-material';
+import { useNavigate } from 'react-router-dom';
+import { auth } from '../firebase-config';
+import { onAuthStateChanged, signOut } from 'firebase/auth';
 
 const Home: React.FC = () => {
   const [isDrawerOpen, setIsDrawerOpen] = useState<boolean>(false);
+  const [user, setUser] = useState<any>(null);
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+    });
+
+    // Cleanup subscription on unmount
+    return () => unsubscribe();
+  }, []);
 
   const accounts = [
     {
@@ -90,6 +111,28 @@ const Home: React.FC = () => {
     setIsDrawerOpen(open);
   };
 
+  const handleLogin = () => {
+    navigate('/login');
+  };
+
+  const handleSignOut = async () => {
+    try {
+      await signOut(auth);
+      // No navigation needed, the routing will handle the redirect
+      setAnchorEl(null);
+    } catch (error) {
+      console.error('Sign out error', error);
+    }
+  };
+
+  const handleProfileMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleProfileMenuClose = () => {
+    setAnchorEl(null);
+  };
+
   return (
     <Box sx={{ flexGrow: 1 }}>
       <AppBar position="static">
@@ -106,8 +149,49 @@ const Home: React.FC = () => {
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
             Financial Dashboard
           </Typography>
+          {user ? (
+            <IconButton 
+              color="inherit" 
+              onClick={handleProfileMenuOpen}
+            >
+              <Avatar 
+                src={user.photoURL || undefined} 
+                alt={user.displayName || 'User'}
+                sx={{ width: 32, height: 32 }}
+              />
+            </IconButton>
+          ) : (
+            <Button 
+              color="inherit" 
+              startIcon={<LoginIcon />} 
+              onClick={handleLogin}
+            >
+              Sign In
+            </Button>
+          )}
         </Toolbar>
       </AppBar>
+
+      <Menu
+        anchorEl={anchorEl}
+        open={Boolean(anchorEl)}
+        onClose={handleProfileMenuClose}
+        anchorOrigin={{
+          vertical: 'bottom',
+          horizontal: 'right',
+        }}
+        transformOrigin={{
+          vertical: 'top',
+          horizontal: 'right',
+        }}
+      >
+        <MenuItem onClick={handleSignOut}>
+          <ListItemIcon>
+            <LogoutIcon fontSize="small" />
+          </ListItemIcon>
+          Sign Out
+        </MenuItem>
+      </Menu>
 
       <Drawer
         anchor="left"
