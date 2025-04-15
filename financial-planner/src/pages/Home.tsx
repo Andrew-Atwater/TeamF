@@ -380,7 +380,7 @@ const Home: React.FC = () => {
 
   const handleAccountClick = (account: Account) => {
     if (isEditMode) {
-      setSelectedAccount(account);
+      setSelectedAccount({...account});
       setIsEditDialogOpen(true);
     }
   };
