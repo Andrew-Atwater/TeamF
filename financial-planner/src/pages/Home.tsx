@@ -48,6 +48,7 @@ import { auth, db } from '../firebase-config';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { collection, query, where, getDocs, addDoc, doc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { MenuItems } from './MenuItems';
+import { collection, query, where, getDocs, addDoc, doc, updateDoc, deleteDoc, Timestamp } from 'firebase/firestore';
 
 interface Account {
   id?: string;
@@ -57,6 +58,18 @@ interface Account {
   description: string;
   type: 'savings' | 'debt';
   userId: string;
+}
+
+interface Transaction {
+  id?: string;
+  accountId: string;
+  accountName: string;
+  userId: string;
+  type: 'create' | 'update' | 'delete';
+  previousBalance?: number;
+  newBalance?: number;
+  timestamp: Date;
+  description: string;
 }
 
 const Home: React.FC = () => {
@@ -76,6 +89,7 @@ const Home: React.FC = () => {
     description: '',
     type: 'savings'
   });
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
   
   const navigate = useNavigate();
 
@@ -113,15 +127,65 @@ const Home: React.FC = () => {
     }
   };
 
+  const fetchTransactions = async (uid: string) => {
+    try {
+      const transactionsRef = collection(db, 'transactions');
+      const q = query(transactionsRef, where('userId', '==', uid));
+      const querySnapshot = await getDocs(q);
+      
+      const transactionsData: Transaction[] = [];
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        transactionsData.push({
+          id: doc.id,
+          ...data,
+          timestamp: data.timestamp.toDate()
+        } as Transaction);
+      });
+      
+      setTransactions(transactionsData.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime()));
+    } catch (error) {
+      console.error('Error fetching transactions:', error);
+    }
+  };
+
+  const addTransaction = async (transaction: Omit<Transaction, 'id' | 'timestamp'>) => {
+    if (!user) return;
+    
+    try {
+      const transactionsRef = collection(db, 'transactions');
+      await addDoc(transactionsRef, {
+        ...transaction,
+        timestamp: Timestamp.now()
+      });
+      
+      // Refresh transactions
+      fetchTransactions(user.uid);
+    } catch (error) {
+      console.error('Error adding transaction:', error);
+    }
+  };
+
   const handleAddAccount = async () => {
     if (!user) return;
     
     try {
       const accountsRef = collection(db, 'accounts');
-      await addDoc(accountsRef, {
+      const newBalance = newAccount.type === 'debt' ? -Math.abs(newAccount.balance) : Math.abs(newAccount.balance);
+      const docRef = await addDoc(accountsRef, {
         ...newAccount,
         userId: user.uid,
-        balance: newAccount.type === 'debt' ? -Math.abs(newAccount.balance) : Math.abs(newAccount.balance)
+        balance: newBalance
+      });
+      
+      // Add transaction record
+      await addTransaction({
+        accountId: docRef.id,
+        accountName: newAccount.name,
+        userId: user.uid,
+        type: 'create',
+        newBalance: newBalance,
+        description: `Created ${newAccount.type} account: ${newAccount.name}`
       });
       
       // Reset form and close dialog
@@ -134,7 +198,7 @@ const Home: React.FC = () => {
       });
       setIsAddDialogOpen(false);
       
-      // Refresh accounts
+      // Refresh accounts and transactions
       fetchAccounts(user.uid);
     } catch (error) {
       console.error('Error adding account:', error);
@@ -146,18 +210,35 @@ const Home: React.FC = () => {
     
     try {
       const accountRef = doc(db, 'accounts', selectedAccount.id);
+      const newBalance = selectedAccount.type === 'debt' ? -Math.abs(selectedAccount.balance) : Math.abs(selectedAccount.balance);
+      
+      // Get previous balance by directly accessing the document
+      const accountSnapshot = await getDocs(query(collection(db, 'accounts'), where('__name__', '==', selectedAccount.id)));
+      const previousBalance = accountSnapshot.docs[0]?.data().balance || 0;
+      
       await updateDoc(accountRef, {
         name: selectedAccount.name,
         description: selectedAccount.description,
-        balance: selectedAccount.type === 'debt' ? -Math.abs(selectedAccount.balance) : Math.abs(selectedAccount.balance),
+        balance: newBalance,
         dueDate: selectedAccount.dueDate,
         type: selectedAccount.type
+      });
+      
+      // Add transaction record
+      await addTransaction({
+        accountId: selectedAccount.id,
+        accountName: selectedAccount.name,
+        userId: user.uid,
+        type: 'update',
+        previousBalance: previousBalance,
+        newBalance: newBalance,
+        description: `Updated ${selectedAccount.type} account: ${selectedAccount.name}`
       });
       
       setIsEditDialogOpen(false);
       setSelectedAccount(null);
       
-      // Refresh accounts
+      // Refresh accounts and transactions
       fetchAccounts(user.uid);
     } catch (error) {
       console.error('Error updating account:', error);
@@ -169,12 +250,23 @@ const Home: React.FC = () => {
     
     try {
       const accountRef = doc(db, 'accounts', selectedAccount.id);
+      
+      // Add transaction record before deleting
+      await addTransaction({
+        accountId: selectedAccount.id,
+        accountName: selectedAccount.name,
+        userId: user.uid,
+        type: 'delete',
+        previousBalance: selectedAccount.balance,
+        description: `Deleted ${selectedAccount.type} account: ${selectedAccount.name}`
+      });
+      
       await deleteDoc(accountRef);
       
       setIsEditDialogOpen(false);
       setSelectedAccount(null);
       
-      // Refresh accounts
+      // Refresh accounts and transactions
       fetchAccounts(user.uid);
     } catch (error) {
       console.error('Error deleting account:', error);
@@ -218,6 +310,34 @@ const Home: React.FC = () => {
       dueDate: type === 'debt' ? (prev!.dueDate || new Date().toISOString().split('T')[0]) : null
     }));
   };
+
+  const menuItems = [
+    { 
+      icon: <AddCircleIcon />, 
+      text: 'Add Transaction',
+      action: () => {} 
+    },
+    { 
+      icon: <ListIcon />, 
+      text: 'Transaction History',
+      action: () => navigate('/transactions') 
+    },
+    { 
+      icon: <BarChartIcon />, 
+      text: 'Reports',
+      action: () => {} 
+    },
+    { 
+      icon: <AccountBalanceIcon />, 
+      text: 'Accounts',
+      action: () => {} 
+    },
+    { 
+      icon: <SettingsIcon />, 
+      text: 'Settings',
+      action: () => {} 
+    }
+  ];
 
   const toggleDrawer = (open: boolean) => (event: React.KeyboardEvent | React.MouseEvent) => {
     if (
@@ -633,6 +753,26 @@ const Home: React.FC = () => {
             </Button>
           </DialogActions>
         </Dialog>
+
+        <Box sx={{ mt: 4 }}>
+          <Typography variant="h5" gutterBottom>
+            Transaction History
+          </Typography>
+          <List>
+            {transactions.map((transaction) => (
+              <ListItem key={transaction.id} divider>
+                <ListItemText
+                  primary={transaction.description}
+                  secondary={`${transaction.timestamp.toLocaleString()} - ${
+                    transaction.type === 'update' 
+                      ? `Balance changed from $${Math.abs(transaction.previousBalance || 0)} to $${Math.abs(transaction.newBalance || 0)}`
+                      : ''
+                  }`}
+                />
+              </ListItem>
+            ))}
+          </List>
+        </Box>
       </Container>
     </Box>
   );
