@@ -41,14 +41,18 @@ import {
   Add as AddIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
-  Save as SaveIcon
+  Save as SaveIcon,
+  AddCircle as AddCircleIcon,
+  List as ListIcon,
+  BarChart as BarChartIcon,
+  AccountBalance as AccountBalanceIcon,
+  Settings as SettingsIcon
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { auth, db } from '../firebase-config';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
-import { collection, query, where, getDocs, addDoc, doc, updateDoc, deleteDoc } from 'firebase/firestore';
-import { MenuItems } from './MenuItems';
 import { collection, query, where, getDocs, addDoc, doc, updateDoc, deleteDoc, Timestamp } from 'firebase/firestore';
+import { MenuItems } from './MenuItems';
 
 interface Account {
   id?: string;
@@ -98,8 +102,10 @@ const Home: React.FC = () => {
       setUser(currentUser);
       if (currentUser) {
         fetchAccounts(currentUser.uid);
+        fetchTransactions(currentUser.uid);
       } else {
         setAccounts([]);
+        setTransactions([]);
         setIsLoading(false);
       }
     });
@@ -315,7 +321,7 @@ const Home: React.FC = () => {
     { 
       icon: <AddCircleIcon />, 
       text: 'Add Transaction',
-      action: () => {} 
+      action: () => navigate('/add-transaction')
     },
     { 
       icon: <ListIcon />, 
@@ -335,7 +341,7 @@ const Home: React.FC = () => {
     { 
       icon: <SettingsIcon />, 
       text: 'Settings',
-      action: () => {} 
+      action: () => navigate('/settings')
     }
   ];
 
