@@ -5,6 +5,7 @@ import ListIcon from '@mui/icons-material/List';
 import BarChartIcon from '@mui/icons-material/BarChart';
 import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
 import SettingsIcon from '@mui/icons-material/Settings';
+import '../styles/Menu.css';
 
 export const MenuItems = () => {
   const navigate = useNavigate();
@@ -37,14 +38,27 @@ export const MenuItems = () => {
     }
   ];
 
-    return (
-        <div>
-          {menuItems.map((item, index) => (
-            <div key={index} onClick={item.action} style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', marginBottom: '1rem' }}>
-              {item.icon}
-              <span style={{ marginLeft: '8px' }}>{item.text}</span>
-            </div>
-          ))}
+  return (
+    <div>
+      {menuItems.map((item, index) => (
+        <div 
+          key={index} 
+          onClick={item.action} 
+          className="menu-item"
+          style={{ 
+            cursor: 'pointer', 
+            display: 'flex', 
+            alignItems: 'center', 
+            marginBottom: '1rem',
+            padding: '8px',
+            borderRadius: '4px',
+            transition: 'background-color 0.2s'
+          }}
+        >
+          {item.icon}
+          <span style={{ marginLeft: '8px' }}>{item.text}</span>
         </div>
-      );
-    };
+      ))}
+    </div>
+  );
+};

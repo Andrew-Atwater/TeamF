@@ -5,6 +5,7 @@ import { auth } from './firebase-config';
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import Settings from "./pages/Settings";
 
 function App() {
   const [user, loading] = useAuthState(auth);
@@ -18,6 +19,7 @@ function App() {
       <Route path="/" element={user ? <Home /> : <Navigate to="/login" replace />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
+      <Route path="/settings" element={user ? <Settings /> : <Navigate to="/login" replace />} />
     </Routes>
   );
 }

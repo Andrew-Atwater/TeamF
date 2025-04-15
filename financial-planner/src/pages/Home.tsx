@@ -35,11 +35,6 @@ import {
 } from '@mui/material';
 import { 
   Menu as MenuIcon, 
-  AddCircle as AddCircleIcon, 
-  List as ListIcon, 
-  BarChart as BarChartIcon, 
-  AccountBalance as AccountBalanceIcon, 
-  Settings as SettingsIcon, 
   Close as CloseIcon,
   Login as LoginIcon,
   Logout as LogoutIcon,
@@ -52,6 +47,7 @@ import { useNavigate } from 'react-router-dom';
 import { auth, db } from '../firebase-config';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { collection, query, where, getDocs, addDoc, doc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { MenuItems } from './MenuItems';
 
 interface Account {
   id?: string;
@@ -223,34 +219,6 @@ const Home: React.FC = () => {
     }));
   };
 
-  const menuItems = [
-    { 
-      icon: <AddCircleIcon />, 
-      text: 'Add Transaction',
-      action: () => {} 
-    },
-    { 
-      icon: <ListIcon />, 
-      text: 'Transaction History',
-      action: () => {} 
-    },
-    { 
-      icon: <BarChartIcon />, 
-      text: 'Reports',
-      action: () => {} 
-    },
-    { 
-      icon: <AccountBalanceIcon />, 
-      text: 'Accounts',
-      action: () => {} 
-    },
-    { 
-      icon: <SettingsIcon />, 
-      text: 'Settings',
-      action: () => {} 
-    }
-  ];
-
   const toggleDrawer = (open: boolean) => (event: React.KeyboardEvent | React.MouseEvent) => {
     if (
       event.type === 'keydown' && 
@@ -382,18 +350,7 @@ const Home: React.FC = () => {
             </IconButton>
           </Box>
           <Divider />
-          <List>
-            {menuItems.map((item, index) => (
-              <ListItem 
-                key={index} 
-                onClick={item.action}
-                disableGutters
-              >
-                <ListItemIcon>{item.icon}</ListItemIcon>
-                <ListItemText primary={item.text} />
-              </ListItem>
-            ))}
-          </List>
+          <MenuItems />
         </Box>
       </Drawer>
 
