@@ -238,7 +238,7 @@ const Home: React.FC = () => {
         type: 'update',
         previousBalance: previousBalance,
         newBalance: newBalance,
-        description: `Updated ${selectedAccount.type} account: ${selectedAccount.name}`
+        description: `Updated account ${selectedAccount.name}`
       });
       
       setIsEditDialogOpen(false);
@@ -781,12 +781,20 @@ const Home: React.FC = () => {
             {transactions.map((transaction) => (
               <ListItem key={transaction.id} divider>
                 <ListItemText
-                  primary={transaction.description}
-                  secondary={`${transaction.timestamp.toLocaleString()} - ${
-                    transaction.type === 'update' 
-                      ? `Balance changed from $${Math.abs(transaction.previousBalance || 0)} to $${Math.abs(transaction.newBalance || 0)}`
-                      : ''
-                  }`}
+                  primary={
+                    transaction.type === 'create' || transaction.type === 'delete'
+                      ? transaction.description
+                      : `${transaction.description} (${transaction.accountName})`
+                  }
+                  secondary={
+                    `${transaction.timestamp.toLocaleString()}${transaction.type === 'delete' ? '' : ' - '}${
+                      transaction.type === 'create' 
+                        ? `Starting Balance: $${Math.abs(transaction.newBalance || 0).toFixed(2)}`
+                        : transaction.type === 'update'
+                        ? `Balance changed from $${Math.abs(transaction.previousBalance || 0).toFixed(2)} to $${Math.abs(transaction.newBalance || 0).toFixed(2)}`
+                        : ''
+                    }`
+                  }
                 />
               </ListItem>
             ))}
