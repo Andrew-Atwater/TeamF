@@ -651,7 +651,7 @@ const Home: React.FC = () => {
                       variant="body1" 
                       color="error.main"
                     >
-                      {new Date(account.dueDate).toLocaleDateString()}
+                      {new Date(account.dueDate + 'T00:00:00').toLocaleDateString()}
                     </Typography>
                   </Box>
                 )}
