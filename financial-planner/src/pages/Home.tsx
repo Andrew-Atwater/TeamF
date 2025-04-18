@@ -565,7 +565,20 @@ const Home: React.FC = () => {
         {user && (
           <SpeedDial
             ariaLabel="account actions"
-            sx={{ position: 'fixed', bottom: 20, right: 20 }}
+            sx={{
+              position: 'fixed',
+              bottom: { xs: '1.5rem', sm: '2rem' },
+              right: { xs: '1.5rem', sm: '2rem' },
+              '& .MuiSpeedDial-fab': {
+                width: { xs: 48, sm: 56 },
+                height: { xs: 48, sm: 56 },
+                '& .MuiSpeedDialIcon-root': {
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }
+              }
+            }}
             icon={<SpeedDialIcon />}
           >
             {speedDialActions.map((action) => (
