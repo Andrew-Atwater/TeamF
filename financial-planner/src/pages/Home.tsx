@@ -363,13 +363,14 @@ const Home: React.FC = () => {
   const handleDeleteAccount = async () => {
     if (!user || !selectedAccount || !selectedAccount.id) return;
     
-    // Check if there's a remaining balance
-    if (selectedAccount.balance !== 0) {
-      setIsSweepDialogOpen(true);
+    // If there's no balance, delete directly
+    if (selectedAccount.balance === 0) {
+      await performDeleteAccount();
       return;
     }
 
-    await performDeleteAccount();
+    // Show sweep dialog for any account with balance
+    setIsSweepDialogOpen(true);
   };
 
   const performDeleteAccount = async (sweepToAccountId?: string) => {
@@ -381,8 +382,8 @@ const Home: React.FC = () => {
       if (sweepToAccountId && selectedAccount.balance !== 0) {
         // Handle sweep transaction to existing account
         const targetAccount = accounts.find(acc => acc.id === sweepToAccountId);
-        if (targetAccount) {
-          const targetAccountRef = doc(db, 'accounts', sweepToAccountId);
+        if (targetAccount && targetAccount.id) {
+          const targetAccountRef = doc(db, 'accounts', targetAccount.id);
           const newBalance = targetAccount.balance + selectedAccount.balance;
           
           // Update target account balance
@@ -399,12 +400,8 @@ const Home: React.FC = () => {
             previousBalance: selectedAccount.balance,
             description: `Deleted account ${selectedAccount.name} - sweep balance - swept $${Math.abs(selectedAccount.balance).toFixed(2)} from ${selectedAccount.name} to ${targetAccount.name}`
           });
-          
-          // Delete the account
-          await deleteDoc(accountRef);
         }
-      } else if (!isCreatingAccountForSweep) {
-        // Only handle regular deletion if we're not in the process of creating a new account
+      } else {
         // Regular delete transaction
         await addTransaction({
           accountId: selectedAccount.id,
@@ -414,17 +411,17 @@ const Home: React.FC = () => {
           previousBalance: selectedAccount.balance,
           description: `Deleted ${selectedAccount.type} account: ${selectedAccount.name}`
         });
-        
-        await deleteDoc(accountRef);
       }
       
-      // Reset states only if we're not in the process of creating a new account
-      if (!isCreatingAccountForSweep) {
-        setIsEditDialogOpen(false);
-        setIsSweepDialogOpen(false);
-        setSweepTargetAccountId('');
-        setSelectedAccount(null);
-      }
+      // Delete the account
+      await deleteDoc(accountRef);
+      
+      // Reset states
+      setIsEditDialogOpen(false);
+      setIsSweepDialogOpen(false);
+      setSweepTargetAccountId('');
+      setSelectedAccount(null);
+      setIsCreatingAccountForSweep(false);
       
       // Refresh accounts and transactions
       fetchAccounts(user.uid);
@@ -436,8 +433,9 @@ const Home: React.FC = () => {
   const handleSweepDialogClose = (shouldSweep: boolean) => {
     if (!shouldSweep) {
       // User chose not to sweep, proceed with regular delete
-      performDeleteAccount();
-      setIsSweepDialogOpen(false);
+      setIsSweepDialogOpen(false);  // Close sweep dialog first
+      setIsEditDialogOpen(false);   // Close edit dialog
+      performDeleteAccount();        // Then delete the account
     } else {
       // Check if there are accounts of the same type
       const sameTypeAccounts = accounts.filter(
