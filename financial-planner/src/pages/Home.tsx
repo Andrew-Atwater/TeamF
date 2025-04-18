@@ -86,6 +86,9 @@ const Home: React.FC = () => {
   const [isEditMode, setIsEditMode] = useState<boolean>(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState<boolean>(false);
   const [selectedAccount, setSelectedAccount] = useState<Account | null>(null);
+  const [isSweepDialogOpen, setIsSweepDialogOpen] = useState<boolean>(false);
+  const [sweepTargetAccountId, setSweepTargetAccountId] = useState<string>('');
+  const [isCreatingAccountForSweep, setIsCreatingAccountForSweep] = useState<boolean>(false);
   const [newAccount, setNewAccount] = useState<Omit<Account, 'userId'>>({
     name: '',
     balance: 0,
@@ -178,21 +181,51 @@ const Home: React.FC = () => {
     try {
       const accountsRef = collection(db, 'accounts');
       const newBalance = newAccount.type === 'debt' ? -Math.abs(newAccount.balance) : Math.abs(newAccount.balance);
+      
+      // If we're creating an account for sweep, add the swept balance
+      const finalBalance = isCreatingAccountForSweep && selectedAccount 
+        ? newBalance + selectedAccount.balance 
+        : newBalance;
+      
       const docRef = await addDoc(accountsRef, {
         ...newAccount,
         userId: user.uid,
-        balance: newBalance
+        balance: finalBalance
       });
       
-      // Add transaction record
+      // Add transaction record for account creation
       await addTransaction({
         accountId: docRef.id,
         accountName: newAccount.name,
         userId: user.uid,
         type: 'create',
-        newBalance: newBalance,
+        newBalance: finalBalance,
         description: `Created ${newAccount.type} account: ${newAccount.name}`
       });
+      
+      // If we were creating an account for sweep, add the sweep transaction and delete old account
+      if (isCreatingAccountForSweep && selectedAccount && selectedAccount.id) {
+        // Add sweep transaction
+        await addTransaction({
+          accountId: selectedAccount.id,
+          accountName: selectedAccount.name,
+          userId: user.uid,
+          type: 'delete',
+          previousBalance: selectedAccount.balance,
+          description: `Deleted account ${selectedAccount.name} - sweep balance - swept $${Math.abs(selectedAccount.balance).toFixed(2)} from ${selectedAccount.name} to ${newAccount.name}`
+        });
+        
+        // Delete the old account
+        const accountRef = doc(db, 'accounts', selectedAccount.id);
+        await deleteDoc(accountRef);
+        
+        // Reset sweep-related states
+        setIsEditDialogOpen(false);
+        setIsSweepDialogOpen(false);
+        setSweepTargetAccountId('');
+        setSelectedAccount(null);
+        setIsCreatingAccountForSweep(false);
+      }
       
       // Reset form and close dialog
       setNewAccount({
@@ -254,28 +287,94 @@ const Home: React.FC = () => {
   const handleDeleteAccount = async () => {
     if (!user || !selectedAccount || !selectedAccount.id) return;
     
+    // Check if there's a remaining balance
+    if (selectedAccount.balance !== 0) {
+      setIsSweepDialogOpen(true);
+      return;
+    }
+
+    await performDeleteAccount();
+  };
+
+  const performDeleteAccount = async (sweepToAccountId?: string) => {
+    if (!user || !selectedAccount || !selectedAccount.id) return;
+    
     try {
       const accountRef = doc(db, 'accounts', selectedAccount.id);
       
-      // Add transaction record before deleting
-      await addTransaction({
-        accountId: selectedAccount.id,
-        accountName: selectedAccount.name,
-        userId: user.uid,
-        type: 'delete',
-        previousBalance: selectedAccount.balance,
-        description: `Deleted ${selectedAccount.type} account: ${selectedAccount.name}`
-      });
+      if (sweepToAccountId && selectedAccount.balance !== 0) {
+        // Handle sweep transaction to existing account
+        const targetAccount = accounts.find(acc => acc.id === sweepToAccountId);
+        if (targetAccount) {
+          const targetAccountRef = doc(db, 'accounts', sweepToAccountId);
+          const newBalance = targetAccount.balance + selectedAccount.balance;
+          
+          // Update target account balance
+          await updateDoc(targetAccountRef, {
+            balance: newBalance
+          });
+          
+          // Add sweep transaction
+          await addTransaction({
+            accountId: selectedAccount.id,
+            accountName: selectedAccount.name,
+            userId: user.uid,
+            type: 'delete',
+            previousBalance: selectedAccount.balance,
+            description: `Deleted account ${selectedAccount.name} - sweep balance - swept $${Math.abs(selectedAccount.balance).toFixed(2)} from ${selectedAccount.name} to ${targetAccount.name}`
+          });
+          
+          // Delete the account
+          await deleteDoc(accountRef);
+        }
+      } else if (!isCreatingAccountForSweep) {
+        // Only handle regular deletion if we're not in the process of creating a new account
+        // Regular delete transaction
+        await addTransaction({
+          accountId: selectedAccount.id,
+          accountName: selectedAccount.name,
+          userId: user.uid,
+          type: 'delete',
+          previousBalance: selectedAccount.balance,
+          description: `Deleted ${selectedAccount.type} account: ${selectedAccount.name}`
+        });
+        
+        await deleteDoc(accountRef);
+      }
       
-      await deleteDoc(accountRef);
-      
-      setIsEditDialogOpen(false);
-      setSelectedAccount(null);
+      // Reset states only if we're not in the process of creating a new account
+      if (!isCreatingAccountForSweep) {
+        setIsEditDialogOpen(false);
+        setIsSweepDialogOpen(false);
+        setSweepTargetAccountId('');
+        setSelectedAccount(null);
+      }
       
       // Refresh accounts and transactions
       fetchAccounts(user.uid);
     } catch (error) {
       console.error('Error deleting account:', error);
+    }
+  };
+
+  const handleSweepDialogClose = (shouldSweep: boolean) => {
+    if (!shouldSweep) {
+      // User chose not to sweep, proceed with regular delete
+      performDeleteAccount();
+      setIsSweepDialogOpen(false);
+    } else {
+      // Check if there are accounts of the same type
+      const sameTypeAccounts = accounts.filter(
+        acc => acc.type === selectedAccount?.type && acc.id !== selectedAccount?.id
+      );
+      
+      if (sameTypeAccounts.length === 0) {
+        // No accounts of same type, guide to account creation
+        setIsCreatingAccountForSweep(true);
+        setIsAddDialogOpen(true);
+        setIsSweepDialogOpen(false);
+      }
+      // If there are accounts, keep sweep dialog open to show account selection
     }
   };
 
@@ -669,7 +768,7 @@ const Home: React.FC = () => {
             <Button 
               onClick={handleAddAccount}
               variant="contained"
-              disabled={!newAccount.name || newAccount.balance === 0}
+              disabled={!newAccount.name || (newAccount.type === 'debt' && newAccount.balance === 0)}
             >
               Add
             </Button>
@@ -766,9 +865,56 @@ const Home: React.FC = () => {
               variant="contained"
               color="primary"
               startIcon={<SaveIcon />}
-              disabled={!selectedAccount?.name || selectedAccount?.balance === 0}
+              disabled={!selectedAccount?.name || (selectedAccount?.type === 'debt' && selectedAccount?.balance === 0)}
             >
               Save
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* Sweep Balance Dialog */}
+        <Dialog open={isSweepDialogOpen} onClose={() => setIsSweepDialogOpen(false)} maxWidth="sm" fullWidth>
+          <DialogTitle>Sweep Balance</DialogTitle>
+          <DialogContent>
+            <Typography gutterBottom>
+              Would you like to sweep the remaining balance into an existing account?
+            </Typography>
+            <Box sx={{ mt: 2 }}>
+              <FormControl component="fieldset">
+                <RadioGroup
+                  value={sweepTargetAccountId}
+                  onChange={(e) => {
+                    setSweepTargetAccountId(e.target.value);
+                  }}
+                >
+                  {accounts
+                    .filter(acc => acc.type === selectedAccount?.type && acc.id !== selectedAccount?.id)
+                    .map((account) => (
+                      <FormControlLabel
+                        key={account.id}
+                        value={account.id}
+                        control={<Radio />}
+                        label={account.name}
+                      />
+                    ))}
+                </RadioGroup>
+              </FormControl>
+            </Box>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => handleSweepDialogClose(false)}>No</Button>
+            <Button
+              onClick={() => {
+                if (sweepTargetAccountId) {
+                  performDeleteAccount(sweepTargetAccountId);
+                } else {
+                  handleSweepDialogClose(true);
+                }
+              }}
+              variant="contained"
+              disabled={accounts.filter(acc => acc.type === selectedAccount?.type && acc.id !== selectedAccount?.id).length > 0 && !sweepTargetAccountId}
+            >
+              Yes
             </Button>
           </DialogActions>
         </Dialog>
@@ -783,11 +929,16 @@ const Home: React.FC = () => {
                 <ListItemText
                   primary={
                     transaction.type === 'create' || transaction.type === 'delete'
-                      ? transaction.description
+                      ? transaction.description.split(' - ')[0]  // Only show the first part for delete transactions
                       : `${transaction.description} (${transaction.accountName})`
                   }
                   secondary={
-                    `${transaction.timestamp.toLocaleString()}${transaction.type === 'delete' ? '' : ' - '}${
+                    `${transaction.timestamp.toLocaleString()}${
+                      transaction.type === 'delete' && transaction.description.includes('sweep balance') 
+                        ? ` - ${transaction.description.split(' - ').slice(1).join(' - ')}` 
+                        : transaction.type === 'delete' 
+                        ? '' 
+                        : ' - '}${
                       transaction.type === 'create' 
                         ? `Starting Balance: $${Math.abs(transaction.newBalance || 0).toFixed(2)}`
                         : transaction.type === 'update'
