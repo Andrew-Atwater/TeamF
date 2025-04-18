@@ -31,7 +31,9 @@ import {
   CircularProgress,
   SpeedDial,
   SpeedDialIcon,
-  SpeedDialAction
+  SpeedDialAction,
+  InputLabel,
+  Select
 } from '@mui/material';
 import { 
   Menu as MenuIcon, 
@@ -62,6 +64,11 @@ interface Account {
   description: string;
   type: 'savings' | 'debt';
   userId: string;
+  monthlyPayment?: {
+    amount: number;
+    linkedAccountId: string;
+    nextPaymentDate: string;
+  } | null;
 }
 
 interface Transaction {
@@ -94,7 +101,8 @@ const Home: React.FC = () => {
     balance: 0,
     dueDate: null,
     description: '',
-    type: 'savings'
+    type: 'savings',
+    monthlyPayment: null
   });
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   
@@ -106,6 +114,7 @@ const Home: React.FC = () => {
       if (currentUser) {
         fetchAccounts(currentUser.uid);
         fetchTransactions(currentUser.uid);
+        processMonthlyPayments(currentUser.uid);
       } else {
         setAccounts([]);
         setTransactions([]);
@@ -155,6 +164,72 @@ const Home: React.FC = () => {
       setTransactions(transactionsData.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime()));
     } catch (error) {
       console.error('Error fetching transactions:', error);
+    }
+  };
+
+  const processMonthlyPayments = async (uid: string) => {
+    try {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      // Get all debt accounts with monthly payments
+      const debtAccounts = accounts.filter(
+        account => account.type === 'debt' && 
+        account.monthlyPayment && 
+        account.monthlyPayment.amount > 0 &&
+        account.monthlyPayment.linkedAccountId &&
+        account.monthlyPayment.nextPaymentDate
+      );
+
+      for (const debtAccount of debtAccounts) {
+        const nextPaymentDate = new Date(debtAccount.monthlyPayment!.nextPaymentDate + 'T00:00:00');
+        
+        if (nextPaymentDate <= today) {
+          const linkedAccount = accounts.find(acc => acc.id === debtAccount.monthlyPayment!.linkedAccountId);
+          
+          if (linkedAccount && linkedAccount.id && debtAccount.id) {
+            const paymentAmount = debtAccount.monthlyPayment!.amount;
+            
+            // Update debt account
+            const debtRef = doc(db, 'accounts', debtAccount.id);
+            const newDebtBalance = debtAccount.balance + paymentAmount;
+            
+            // Update savings account
+            const savingsRef = doc(db, 'accounts', linkedAccount.id);
+            const newSavingsBalance = linkedAccount.balance - paymentAmount;
+            
+            // Calculate next payment date (same day next month)
+            const nextDate = new Date(nextPaymentDate);
+            nextDate.setMonth(nextDate.getMonth() + 1);
+            
+            // Update accounts
+            await updateDoc(debtRef, {
+              balance: newDebtBalance,
+              'monthlyPayment.nextPaymentDate': nextDate.toISOString().split('T')[0]
+            });
+            
+            await updateDoc(savingsRef, {
+              balance: newSavingsBalance
+            });
+            
+            // Add transaction record
+            await addTransaction({
+              accountId: debtAccount.id,
+              accountName: debtAccount.name,
+              userId: uid,
+              type: 'update',
+              previousBalance: debtAccount.balance,
+              newBalance: newDebtBalance,
+              description: `Monthly payment from ${linkedAccount.name} to ${debtAccount.name}`
+            });
+          }
+        }
+      }
+      
+      // Refresh accounts after processing payments
+      fetchAccounts(uid);
+    } catch (error) {
+      console.error('Error processing monthly payments:', error);
     }
   };
 
@@ -233,7 +308,8 @@ const Home: React.FC = () => {
         balance: 0,
         dueDate: null,
         description: '',
-        type: 'savings'
+        type: 'savings',
+        monthlyPayment: null
       });
       setIsAddDialogOpen(false);
       
@@ -655,6 +731,21 @@ const Home: React.FC = () => {
                     </Typography>
                   </Box>
                 )}
+                {account.monthlyPayment && account.monthlyPayment.amount > 0 && (
+                  <Box sx={{ mt: 2 }}>
+                    <Typography variant="body2" color="text.secondary">
+                      Monthly Payment: ${account.monthlyPayment.amount.toFixed(2)}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      Next Payment: {new Date(account.monthlyPayment.nextPaymentDate + 'T00:00:00').toLocaleDateString()}
+                    </Typography>
+                    {accounts.find(acc => acc.id === account.monthlyPayment?.linkedAccountId) && (
+                      <Typography variant="body2" color="text.secondary">
+                        From: {accounts.find(acc => acc.id === account.monthlyPayment?.linkedAccountId)?.name}
+                      </Typography>
+                    )}
+                  </Box>
+                )}
               </CardContent>
             </Card>
           ))
@@ -748,19 +839,76 @@ const Home: React.FC = () => {
             </FormControl>
             
             {newAccount.type === 'debt' && (
-              <TextField
-                margin="dense"
-                name="dueDate"
-                label="Due Date"
-                type="date"
-                fullWidth
-                variant="outlined"
-                value={newAccount.dueDate || ''}
-                onChange={handleInputChange}
-                InputLabelProps={{
-                  shrink: true,
-                }}
-              />
+              <>
+                <TextField
+                  margin="dense"
+                  name="dueDate"
+                  label="Due Date"
+                  type="date"
+                  fullWidth
+                  variant="outlined"
+                  value={newAccount.dueDate || ''}
+                  onChange={handleInputChange}
+                  InputLabelProps={{
+                    shrink: true,
+                  }}
+                  sx={{ mb: 2 }}
+                />
+                
+                <Typography variant="subtitle1" sx={{ mt: 2, mb: 1 }}>
+                  Monthly Payment (Optional)
+                </Typography>
+                
+                <TextField
+                  margin="dense"
+                  name="monthlyPaymentAmount"
+                  label="Monthly Payment Amount"
+                  type="number"
+                  fullWidth
+                  variant="outlined"
+                  value={newAccount.monthlyPayment?.amount || ''}
+                  onChange={(e) => {
+                    const amount = parseFloat(e.target.value) || 0;
+                    setNewAccount(prev => ({
+                      ...prev,
+                      monthlyPayment: amount > 0 ? {
+                        amount,
+                        linkedAccountId: prev.monthlyPayment?.linkedAccountId || '',
+                        nextPaymentDate: prev.dueDate || ''
+                      } : null
+                    }));
+                  }}
+                  sx={{ mb: 2 }}
+                />
+                
+                {newAccount.monthlyPayment && newAccount.monthlyPayment.amount > 0 && (
+                  <FormControl fullWidth sx={{ mb: 2 }}>
+                    <InputLabel>Link to Savings Account</InputLabel>
+                    <Select
+                      name="linkedAccountId"
+                      value={newAccount.monthlyPayment.linkedAccountId}
+                      label="Link to Savings Account"
+                      onChange={(e) => {
+                        setNewAccount(prev => ({
+                          ...prev,
+                          monthlyPayment: prev.monthlyPayment ? {
+                            ...prev.monthlyPayment,
+                            linkedAccountId: e.target.value
+                          } : null
+                        }));
+                      }}
+                    >
+                      {accounts
+                        .filter(acc => acc.type === 'savings')
+                        .map((account) => (
+                          <MenuItem key={account.id} value={account.id}>
+                            {account.name} (${account.balance.toFixed(2)})
+                          </MenuItem>
+                        ))}
+                    </Select>
+                  </FormControl>
+                )}
+              </>
             )}
           </DialogContent>
           <DialogActions>
@@ -834,19 +982,76 @@ const Home: React.FC = () => {
                 </FormControl>
                 
                 {selectedAccount.type === 'debt' && (
-                  <TextField
-                    margin="dense"
-                    name="dueDate"
-                    label="Due Date"
-                    type="date"
-                    fullWidth
-                    variant="outlined"
-                    value={selectedAccount.dueDate || ''}
-                    onChange={handleEditInputChange}
-                    InputLabelProps={{
-                      shrink: true,
-                    }}
-                  />
+                  <>
+                    <TextField
+                      margin="dense"
+                      name="dueDate"
+                      label="Due Date"
+                      type="date"
+                      fullWidth
+                      variant="outlined"
+                      value={selectedAccount.dueDate || ''}
+                      onChange={handleEditInputChange}
+                      InputLabelProps={{
+                        shrink: true,
+                      }}
+                      sx={{ mb: 2 }}
+                    />
+                    
+                    <Typography variant="subtitle1" sx={{ mt: 2, mb: 1 }}>
+                      Monthly Payment (Optional)
+                    </Typography>
+                    
+                    <TextField
+                      margin="dense"
+                      name="monthlyPaymentAmount"
+                      label="Monthly Payment Amount"
+                      type="number"
+                      fullWidth
+                      variant="outlined"
+                      value={selectedAccount.monthlyPayment?.amount || ''}
+                      onChange={(e) => {
+                        const amount = parseFloat(e.target.value) || 0;
+                        setSelectedAccount(prev => ({
+                          ...prev!,
+                          monthlyPayment: amount > 0 ? {
+                            amount,
+                            linkedAccountId: prev!.monthlyPayment?.linkedAccountId || '',
+                            nextPaymentDate: prev!.dueDate || ''
+                          } : null
+                        }));
+                      }}
+                      sx={{ mb: 2 }}
+                    />
+                    
+                    {selectedAccount.monthlyPayment && selectedAccount.monthlyPayment.amount > 0 && (
+                      <FormControl fullWidth sx={{ mb: 2 }}>
+                        <InputLabel>Link to Savings Account</InputLabel>
+                        <Select
+                          name="linkedAccountId"
+                          value={selectedAccount.monthlyPayment.linkedAccountId}
+                          label="Link to Savings Account"
+                          onChange={(e) => {
+                            setSelectedAccount(prev => ({
+                              ...prev!,
+                              monthlyPayment: prev!.monthlyPayment ? {
+                                ...prev!.monthlyPayment,
+                                linkedAccountId: e.target.value
+                              } : null
+                            }));
+                          }}
+                        >
+                          {accounts
+                            .filter(acc => acc.type === 'savings' && acc.id !== selectedAccount.id)
+                            .map((account) => (
+                              <MenuItem key={account.id} value={account.id}>
+                                {account.name} (${account.balance.toFixed(2)})
+                              </MenuItem>
+                            ))}
+                        </Select>
+                      </FormControl>
+                    )}
+                  </>
                 )}
               </>
             )}
