@@ -125,6 +125,20 @@ const Home: React.FC = () => {
     return () => unsubscribe();
   }, []);
 
+  useEffect(() => {
+    // Check for pending debt amount from cost calculator
+    const pendingDebtAmount = localStorage.getItem('pendingDebtAmount');
+    if (pendingDebtAmount) {
+      setNewAccount({
+        ...newAccount,
+        type: 'debt',
+        balance: parseFloat(pendingDebtAmount)
+      });
+      setIsAddDialogOpen(true);
+      localStorage.removeItem('pendingDebtAmount'); // Clear the pending amount
+    }
+  }, []); // Run once on component mount
+
   const fetchAccounts = async (uid: string) => {
     try {
       setIsLoading(true);

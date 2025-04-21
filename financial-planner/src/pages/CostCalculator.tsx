@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Container,
   Typography,
@@ -94,6 +95,7 @@ const mealPlans: MealPlan[] = [
 ];
 
 const CostCalculator: React.FC = () => {
+  const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [yearOfStudy, setYearOfStudy] = useState<string>('');
   const [residencyStatus, setResidencyStatus] = useState<'in-state' | 'out-of-state' | ''>('');
@@ -362,6 +364,48 @@ const CostCalculator: React.FC = () => {
 
     return items;
   };
+
+  const handleCreateDebtAccount = () => {
+    // Store the total in localStorage for the account creation page
+    localStorage.setItem('pendingDebtAmount', calculateTotalWithFees().toString());
+    navigate('/');
+  };
+
+  const CreditHours = () => (
+    <Box sx={{ 
+      display: 'flex', 
+      justifyContent: 'space-between',
+      alignItems: 'center'  // Add vertical centering
+    }}>
+      <Typography variant="h6" component="h2" sx={{ color: 'text.primary' }}>
+        Credit Hours
+      </Typography>
+      <Box sx={{ 
+        display: 'flex', 
+        alignItems: 'center',  // Center items vertically
+        gap: 2  // Add consistent spacing between amount and button
+      }}>
+        <Typography variant="h4" component="p" sx={{ color: 'text.primary' }}>
+          ${creditHours ? (parseFloat(creditHours) * (residencyStatus === 'in-state' ? 388 : 1108)).toLocaleString() : '0'}
+        </Typography>
+        <Button
+          variant="outlined"
+          onClick={() => setStep(3)}
+          sx={{ 
+            minWidth: 'auto',
+            color: 'white',
+            borderColor: 'white',
+            '&:hover': {
+              borderColor: 'white',
+              backgroundColor: 'rgba(255, 255, 255, 0.1)'
+            }
+          }}
+        >
+          EDIT
+        </Button>
+      </Box>
+    </Box>
+  );
 
   return (
     <Container maxWidth="sm">
@@ -786,7 +830,7 @@ const CostCalculator: React.FC = () => {
                         py: 2,
                         display: 'flex',
                         justifyContent: 'space-between',
-                        alignItems: 'flex-start'
+                        alignItems: 'center'  // Center items vertically
                       }}
                       secondaryAction={
                         <Button
@@ -812,8 +856,7 @@ const CostCalculator: React.FC = () => {
                           variant="subtitle1"
                           sx={{
                             fontWeight: 'bold',
-                            color: 'text.primary',
-                            mb: 0.5
+                            color: 'text.primary'
                           }}
                         >
                           {item.label}
@@ -836,7 +879,10 @@ const CostCalculator: React.FC = () => {
                             fontWeight: 'bold',
                             minWidth: '120px',
                             textAlign: 'right',
-                            mr: 8
+                            mr: 8,
+                            display: 'flex',
+                            alignItems: 'center',  // Center text vertically
+                            height: '100%'  // Take full height of container
                           }}
                         >
                           {item.cost < 0 ? '-' : ''}${Math.abs(item.cost).toLocaleString()}
@@ -869,7 +915,7 @@ const CostCalculator: React.FC = () => {
                       color: 'text.primary'
                     }}
                   >
-                    Total Estimated Cost
+                    Estimated Subtotal
                   </Typography>
                   <Typography
                     variant="h5"
@@ -1054,19 +1100,34 @@ const CostCalculator: React.FC = () => {
               >
                 Back to Summary
               </Button>
-              <Button
-                variant="contained"
-                color="primary"
-                onClick={() => setStep(1)}
-                size="large"
-                sx={{
-                  px: 4,
-                  py: 1,
-                  fontSize: '1.1rem'
-                }}
-              >
-                Start Over
-              </Button>
+              <Box sx={{ display: 'flex', gap: 2 }}>
+                <Button
+                  variant="contained"
+                  color="secondary"
+                  onClick={handleCreateDebtAccount}
+                  size="large"
+                  sx={{
+                    px: 4,
+                    py: 1,
+                    fontSize: '1.1rem'
+                  }}
+                >
+                  Create Bill Account
+                </Button>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  onClick={() => setStep(1)}
+                  size="large"
+                  sx={{
+                    px: 4,
+                    py: 1,
+                    fontSize: '1.1rem'
+                  }}
+                >
+                  Start Over
+                </Button>
+              </Box>
             </Box>
           </Box>
         )}

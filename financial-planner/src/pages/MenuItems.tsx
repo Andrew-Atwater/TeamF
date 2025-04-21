@@ -19,7 +19,7 @@ export const MenuItems: React.FC = () => {
     { text: 'Transactions', icon: <ListIcon />, path: '/transactions' },
     { text: 'Reports', icon: <BarChartIcon />, path: '/reports' },
     { text: 'Accounts', icon: <AccountBalanceIcon />, path: '/accounts' },
-    { text: 'Cost Calculator', icon: <CalculateIcon />, path: '/cost-calculator' },
+    { text: 'Tuition Cost Calculator', icon: <CalculateIcon />, path: '/cost-calculator' },
     { text: 'Settings', icon: <SettingsIcon />, path: '/settings' }
   ];
 
