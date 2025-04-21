@@ -40,7 +40,7 @@
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
-    "test": "react-scripts test --transformIgnorePatterns \"node_modules/(?!@firebase)/\"",
+    "test": "react-scripts test --testMatch \"**/?(*.)+(spec|test).[jt]s?(x)\" --transformIgnorePatterns \"node_modules/(?!@firebase)/\"",
     "eject": "react-scripts eject"
   },
   "eslintConfig": {
