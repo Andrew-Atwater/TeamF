@@ -14,31 +14,76 @@ import {
   Grid,
   Slider,
   SelectChangeEvent,
+  CircularProgress,
+  Alert,
+  Snackbar,
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { useSettings } from '../context/SettingsContext';
+import { auth } from '../firebase-config';
 
 const Settings: React.FC = () => {
-  const { settings, updateSettings } = useSettings();
+  const { settings, updateSettings, isLoading, error, availableThemes } = useSettings();
   const navigate = useNavigate();
+  const [showSuccess, setShowSuccess] = React.useState(false);
 
-  const handleFontSizeChange = (_event: Event, newValue: number | number[]) => {
-    updateSettings('fontSize', newValue as number);
+  if (!auth.currentUser) {
+    navigate('/login');
+    return null;
+  }
+
+  const handleFontSizeChange = async (_event: Event, newValue: number | number[]) => {
+    try {
+      await updateSettings('fontSize', newValue as number);
+      setShowSuccess(true);
+    } catch (error) {
+      // Error is handled by context
+    }
   };
 
-  const handleSelectChange = (event: SelectChangeEvent<string>) => {
+  const handleSelectChange = async (event: SelectChangeEvent<string>) => {
     const { name, value } = event.target;
-    updateSettings(name as keyof typeof settings, value);
+    try {
+      await updateSettings(name as keyof typeof settings, value);
+      setShowSuccess(true);
+    } catch (error) {
+      // Error is handled by context
+    }
   };
 
-  const handleSwitchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleSwitchChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const { name, checked } = event.target;
-    updateSettings(name as keyof typeof settings, checked);
+    try {
+      await updateSettings(name as keyof typeof settings, checked);
+      setShowSuccess(true);
+    } catch (error) {
+      // Error is handled by context
+    }
   };
+
+  const capitalizeFirstLetter = (string: string) => {
+    return string.charAt(0).toUpperCase() + string.slice(1);
+  };
+
+  if (isLoading) {
+    return (
+      <Container maxWidth="md">
+        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '80vh' }}>
+          <CircularProgress />
+        </Box>
+      </Container>
+    );
+  }
 
   return (
     <Container maxWidth="md">
       <Box sx={{ my: 4 }}>
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {error}
+          </Alert>
+        )}
+
         <Paper elevation={3} sx={{ p: 3 }}>
           <Typography variant="h4" gutterBottom>
             Settings
@@ -46,7 +91,7 @@ const Settings: React.FC = () => {
 
           <Paper sx={{ p: 3, mb: 3 }}>
             <Typography variant="h6" gutterBottom>
-              Appearance
+              Theme
             </Typography>
             <Grid container spacing={3}>
               <Grid item xs={12}>
@@ -62,6 +107,31 @@ const Settings: React.FC = () => {
                 />
               </Grid>
               
+              <Grid item xs={12}>
+                <FormControl fullWidth>
+                  <InputLabel>Color Theme</InputLabel>
+                  <Select
+                    value={settings.theme}
+                    label="Color Theme"
+                    name="theme"
+                    onChange={handleSelectChange}
+                  >
+                    {availableThemes.map((theme) => (
+                      <MenuItem key={theme} value={theme}>
+                        {capitalizeFirstLetter(theme)}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+            </Grid>
+          </Paper>
+
+          <Paper sx={{ p: 3, mb: 3 }}>
+            <Typography variant="h6" gutterBottom>
+              Typography
+            </Typography>
+            <Grid container spacing={3}>
               <Grid item xs={12}>
                 <FormControl fullWidth>
                   <InputLabel>Font Family</InputLabel>
@@ -133,22 +203,6 @@ const Settings: React.FC = () => {
             </Grid>
           </Paper>
 
-          <Paper sx={{ p: 3 }}>
-            <Typography variant="h6" gutterBottom>
-              Notifications
-            </Typography>
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={settings.notifications}
-                  onChange={handleSwitchChange}
-                  name="notifications"
-                />
-              }
-              label="Enable Notifications"
-            />
-          </Paper>
-
           <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end' }}>
             <Button
               variant="contained"
@@ -160,6 +214,17 @@ const Settings: React.FC = () => {
           </Box>
         </Paper>
       </Box>
+
+      <Snackbar
+        open={showSuccess}
+        autoHideDuration={3000}
+        onClose={() => setShowSuccess(false)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert onClose={() => setShowSuccess(false)} severity="success">
+          Settings saved successfully
+        </Alert>
+      </Snackbar>
     </Container>
   );
 };
