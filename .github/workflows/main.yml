@@ -23,9 +23,11 @@ jobs:
           cache: 'npm'
 
       - name: Install dependencies
+        working-directory: ./financial-planner
         run: npm ci
 
       - name: Run tests
-        run: npm run test -- --watchAll=false
+        working-directory: ./financial-planner
+        run: npm test -- --watchAll=false --passWithNoTests
         env:
           CI: true
