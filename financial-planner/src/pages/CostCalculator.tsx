@@ -30,7 +30,6 @@ interface MealPlan {
   type: string;
   description: string;
   rate: number;
-  restrictions?: string;
 }
 
 const roomRates: RoomRate[] = [
@@ -59,8 +58,7 @@ const mealPlans: MealPlan[] = [
   {
     type: 'H2O Plan',
     description: '120 meal swipes, $1,500 meal plan dollars, Bottomless Kiwibot subscription, 6 guest meals, Unlimited To-Go meals (1 per dining period) and 1 meal exchange per day (Monday–Friday, 2–6 p.m.)',
-    rate: 3050,
-    restrictions: 'Hancock-Hart-Oak Residents only'
+    rate: 3050
   },
   {
     type: 'Junior-Senior Flex',
@@ -124,7 +122,7 @@ const CostCalculator: React.FC = () => {
 
     // Add tuition cost
     if (residencyStatus && creditHours) {
-      const creditHourRate = residencyStatus === 'in-state' ? 388 : 1108;
+      const creditHourRate = residencyStatus === 'in-state' ? 412 : 1108;
       total += parseFloat(creditHours) * creditHourRate;
     }
 
@@ -696,7 +694,6 @@ const CostCalculator: React.FC = () => {
                     <MenuItem 
                       key={plan.type} 
                       value={plan.type}
-                      disabled={plan.restrictions ? yearOfStudy !== '1' : false}
                     >
                       <Box>
                         <Typography variant="subtitle1">
@@ -705,11 +702,6 @@ const CostCalculator: React.FC = () => {
                         <Typography variant="body2" color="text.secondary">
                           {plan.description}
                         </Typography>
-                        {plan.restrictions && (
-                          <Typography variant="body2" color="error">
-                            {plan.restrictions}
-                          </Typography>
-                        )}
                       </Box>
                     </MenuItem>
                   ))}
