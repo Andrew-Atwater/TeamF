@@ -14,6 +14,10 @@ import {
   Radio,
   TextField,
   Paper,
+  List,
+  ListItem,
+  ListItemText,
+  Divider,
 } from '@mui/material';
 
 interface RoomRate {
@@ -103,6 +107,12 @@ const CostCalculator: React.FC = () => {
   const [scholarships, setScholarships] = useState<string>('');
   const [totalCost, setTotalCost] = useState<number>(0);
 
+  const FEES = [
+    { name: 'Infrastructure and Tech Fee', amount: 432.00 },
+    { name: 'Student Activity Fee', amount: 78.00 },
+    { name: 'Academic Materials Program', amount: 239.99 }
+  ];
+
   useEffect(() => {
     calculateTotalCost();
   }, [roomType, monthlyRent, selectedMealPlan, additionalFoodCost, residencyStatus, creditHours, scholarships]);
@@ -145,6 +155,11 @@ const CostCalculator: React.FC = () => {
     }
 
     setTotalCost(total);
+  };
+
+  const calculateTotalWithFees = () => {
+    const feesTotal = FEES.reduce((sum, fee) => sum + fee.amount, 0);
+    return totalCost + feesTotal;
   };
 
   const handleYearChange = (event: SelectChangeEvent) => {
@@ -264,6 +279,88 @@ const CostCalculator: React.FC = () => {
         setStep(step - 1);
       }
     }
+  };
+
+  const getSummaryItems = () => {
+    const items = [];
+
+    // Year of Study
+    items.push({
+      label: "Year of Study",
+      value: yearOfStudy === '4+' ? 'Fourth Year+' : `${yearOfStudy}${['1', '2', '3'].includes(yearOfStudy) ? 'st' : 'th'} Year`,
+      step: 1
+    });
+
+    // Residency Status
+    items.push({
+      label: "Residency Status",
+      value: residencyStatus === 'in-state' ? 'In-State Resident' : 'Out-of-State Student',
+      step: 2
+    });
+
+    // Credit Hours and Tuition
+    const creditHourRate = residencyStatus === 'in-state' ? 388 : 1108;
+    const tuitionCost = parseFloat(creditHours) * creditHourRate;
+    items.push({
+      label: "Credit Hours",
+      value: `${creditHours} credits ($${creditHourRate}/credit)`,
+      cost: tuitionCost,
+      step: 3
+    });
+
+    // Housing
+    if (housingType === 'on-campus') {
+      const selectedRoom = roomRates.find(room => room.type === roomType);
+      items.push({
+        label: "Housing",
+        value: `On-Campus: ${roomType}`,
+        cost: selectedRoom?.rate || 0,
+        step: 5
+      });
+    } else if (housingType === 'off-campus') {
+      const semesterRent = parseFloat(monthlyRent) * 4;
+      items.push({
+        label: "Housing",
+        value: `Off-Campus: $${monthlyRent}/month`,
+        cost: semesterRent,
+        step: 5
+      });
+    }
+
+    // Meal Plan
+    if (wantsMealPlan || yearOfStudy === '1') {
+      const selectedPlan = mealPlans.find(plan => plan.type === selectedMealPlan);
+      items.push({
+        label: "Meal Plan",
+        value: selectedMealPlan,
+        cost: selectedPlan?.rate || 0,
+        step: 7
+      });
+    }
+
+    // Additional Food Cost
+    const monthlyFood = parseFloat(additionalFoodCost);
+    if (!isNaN(monthlyFood)) {
+      items.push({
+        label: wantsMealPlan ? "Additional Food Cost" : "Grocery Cost",
+        value: `$${additionalFoodCost}/month`,
+        cost: monthlyFood * 4,
+        step: 8
+      });
+    }
+
+    // Scholarships
+    const scholarshipAmount = parseFloat(scholarships);
+    if (!isNaN(scholarshipAmount) && scholarshipAmount > 0) {
+      items.push({
+        label: "Scholarships",
+        value: `$${scholarships}`,
+        cost: -scholarshipAmount,
+        step: 9
+      });
+    }
+
+    return items;
   };
 
   return (
@@ -664,6 +761,313 @@ const CostCalculator: React.FC = () => {
                 </Button>
               </Box>
             </FormControl>
+          </Box>
+        )}
+
+        {step === 10 && (
+          <Box sx={{ mt: 3 }}>
+            <Typography variant="h5" gutterBottom sx={{ color: 'text.primary' }}>
+              Summary of Selections
+            </Typography>
+            <Paper 
+              sx={{ 
+                p: 3, 
+                mb: 3, 
+                backgroundColor: 'background.paper',
+                borderRadius: 2,
+                boxShadow: 3
+              }}
+            >
+              <List sx={{ width: '100%' }}>
+                {getSummaryItems().map((item, index) => (
+                  <React.Fragment key={item.label}>
+                    <ListItem
+                      sx={{
+                        py: 2,
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'flex-start'
+                      }}
+                      secondaryAction={
+                        <Button
+                          variant="outlined"
+                          size="small"
+                          onClick={() => setStep(item.step)}
+                          sx={{
+                            color: 'primary.main',
+                            borderColor: 'primary.main',
+                            '&:hover': {
+                              borderColor: 'primary.dark',
+                              backgroundColor: 'primary.dark',
+                              color: 'white'
+                            }
+                          }}
+                        >
+                          Edit
+                        </Button>
+                      }
+                    >
+                      <Box sx={{ flex: 1, pr: 2 }}>
+                        <Typography
+                          variant="subtitle1"
+                          sx={{
+                            fontWeight: 'bold',
+                            color: 'text.primary',
+                            mb: 0.5
+                          }}
+                        >
+                          {item.label}
+                        </Typography>
+                        <Typography
+                          variant="body1"
+                          sx={{
+                            color: 'text.secondary'
+                          }}
+                        >
+                          {item.value}
+                        </Typography>
+                      </Box>
+                      {item.cost !== undefined && (
+                        <Typography
+                          variant="h6"
+                          sx={{
+                            ml: 2,
+                            color: item.cost < 0 ? 'success.main' : 'text.primary',
+                            fontWeight: 'bold',
+                            minWidth: '120px',
+                            textAlign: 'right',
+                            mr: 8
+                          }}
+                        >
+                          {item.cost < 0 ? '-' : ''}${Math.abs(item.cost).toLocaleString()}
+                        </Typography>
+                      )}
+                    </ListItem>
+                    {index < getSummaryItems().length - 1 && (
+                      <Divider 
+                        sx={{ 
+                          my: 1,
+                          borderColor: 'divider'
+                        }} 
+                      />
+                    )}
+                  </React.Fragment>
+                ))}
+                <Divider sx={{ my: 2, borderColor: 'divider' }} />
+                <ListItem
+                  sx={{
+                    py: 2,
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center'
+                  }}
+                >
+                  <Typography
+                    variant="h6"
+                    sx={{
+                      fontWeight: 'bold',
+                      color: 'text.primary'
+                    }}
+                  >
+                    Total Estimated Cost
+                  </Typography>
+                  <Typography
+                    variant="h5"
+                    sx={{
+                      fontWeight: 'bold',
+                      color: 'primary.main',
+                      mr: 8
+                    }}
+                  >
+                    ${totalCost.toLocaleString()}
+                  </Typography>
+                </ListItem>
+              </List>
+            </Paper>
+            <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center' }}>
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={() => setStep(11)}
+                size="large"
+                sx={{
+                  px: 4,
+                  py: 1,
+                  fontSize: '1.1rem'
+                }}
+              >
+                Continue to Final Total
+              </Button>
+            </Box>
+          </Box>
+        )}
+
+        {step === 11 && (
+          <Box sx={{ mt: 3 }}>
+            <Typography variant="h5" gutterBottom sx={{ color: 'text.primary' }}>
+              Final Cost Breakdown
+            </Typography>
+            <Paper 
+              sx={{ 
+                p: 3, 
+                mb: 3, 
+                backgroundColor: 'background.paper',
+                borderRadius: 2,
+                boxShadow: 3
+              }}
+            >
+              <List sx={{ width: '100%' }}>
+                {/* Subtotal */}
+                <ListItem
+                  sx={{
+                    py: 2,
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center'
+                  }}
+                >
+                  <Typography
+                    variant="h6"
+                    sx={{
+                      fontWeight: 'bold',
+                      color: 'text.primary'
+                    }}
+                  >
+                    Subtotal
+                  </Typography>
+                  <Typography
+                    variant="h6"
+                    sx={{
+                      fontWeight: 'bold',
+                      color: 'text.primary',
+                      mr: 2
+                    }}
+                  >
+                    ${totalCost.toLocaleString()}
+                  </Typography>
+                </ListItem>
+
+                <Divider sx={{ my: 2, borderColor: 'divider' }} />
+
+                {/* Fees Section */}
+                <ListItem
+                  sx={{
+                    py: 1,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'flex-start'
+                  }}
+                >
+                  <Typography
+                    variant="h6"
+                    sx={{
+                      fontWeight: 'bold',
+                      color: 'text.primary',
+                      mb: 1
+                    }}
+                  >
+                    Required Fees
+                  </Typography>
+                  <Box sx={{ width: '100%' }}>
+                    {FEES.map((fee, index) => (
+                      <Box
+                        key={fee.name}
+                        sx={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          py: 1
+                        }}
+                      >
+                        <Typography
+                          variant="body1"
+                          sx={{ color: 'text.secondary' }}
+                        >
+                          {fee.name}
+                        </Typography>
+                        <Typography
+                          variant="body1"
+                          sx={{
+                            color: 'text.primary',
+                            mr: 2
+                          }}
+                        >
+                          ${fee.amount.toFixed(2)}
+                        </Typography>
+                      </Box>
+                    ))}
+                  </Box>
+                </ListItem>
+
+                <Divider 
+                  sx={{ 
+                    my: 2, 
+                    borderColor: 'divider',
+                    borderWidth: 2 
+                  }} 
+                />
+
+                {/* Grand Total */}
+                <ListItem
+                  sx={{
+                    py: 2,
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    backgroundColor: 'primary.main',
+                    borderRadius: 1,
+                    mt: 2
+                  }}
+                >
+                  <Typography
+                    variant="h5"
+                    sx={{
+                      fontWeight: 'bold',
+                      color: 'white'
+                    }}
+                  >
+                    GRAND TOTAL
+                  </Typography>
+                  <Typography
+                    variant="h5"
+                    sx={{
+                      fontWeight: 'bold',
+                      color: 'white',
+                      mr: 2
+                    }}
+                  >
+                    ${calculateTotalWithFees().toLocaleString()}
+                  </Typography>
+                </ListItem>
+              </List>
+            </Paper>
+            <Box sx={{ display: 'flex', gap: 2, justifyContent: 'space-between' }}>
+              <Button
+                variant="outlined"
+                onClick={() => setStep(10)}
+                size="large"
+                sx={{
+                  px: 4,
+                  py: 1,
+                  fontSize: '1.1rem'
+                }}
+              >
+                Back to Summary
+              </Button>
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={() => setStep(1)}
+                size="large"
+                sx={{
+                  px: 4,
+                  py: 1,
+                  fontSize: '1.1rem'
+                }}
+              >
+                Start Over
+              </Button>
+            </Box>
           </Box>
         )}
       </Box>
