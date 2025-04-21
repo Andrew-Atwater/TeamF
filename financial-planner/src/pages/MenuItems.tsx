@@ -6,7 +6,8 @@ import {
   List as ListIcon,
   BarChart as BarChartIcon,
   AccountBalance as AccountBalanceIcon,
-  Settings as SettingsIcon
+  Settings as SettingsIcon,
+  Calculate as CalculateIcon
 } from '@mui/icons-material';
 import '../styles/Menu.css';
 
@@ -18,6 +19,7 @@ export const MenuItems: React.FC = () => {
     { text: 'Transactions', icon: <ListIcon />, path: '/transactions' },
     { text: 'Reports', icon: <BarChartIcon />, path: '/reports' },
     { text: 'Accounts', icon: <AccountBalanceIcon />, path: '/accounts' },
+    { text: 'Cost Calculator', icon: <CalculateIcon />, path: '/cost-calculator' },
     { text: 'Settings', icon: <SettingsIcon />, path: '/settings' }
   ];
 
