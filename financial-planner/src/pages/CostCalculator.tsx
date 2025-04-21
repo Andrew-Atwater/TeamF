@@ -92,20 +92,29 @@ const mealPlans: MealPlan[] = [
 const CostCalculator: React.FC = () => {
   const [step, setStep] = useState(1);
   const [yearOfStudy, setYearOfStudy] = useState<string>('');
+  const [residencyStatus, setResidencyStatus] = useState<'in-state' | 'out-of-state' | ''>('');
+  const [creditHours, setCreditHours] = useState<string>('');
   const [housingType, setHousingType] = useState<'on-campus' | 'off-campus' | ''>('');
   const [roomType, setRoomType] = useState<string>('');
   const [monthlyRent, setMonthlyRent] = useState<string>('');
   const [wantsMealPlan, setWantsMealPlan] = useState<boolean | null>(null);
   const [selectedMealPlan, setSelectedMealPlan] = useState<string>('');
   const [additionalFoodCost, setAdditionalFoodCost] = useState<string>('');
+  const [scholarships, setScholarships] = useState<string>('');
   const [totalCost, setTotalCost] = useState<number>(0);
 
   useEffect(() => {
     calculateTotalCost();
-  }, [roomType, monthlyRent, selectedMealPlan, additionalFoodCost]);
+  }, [roomType, monthlyRent, selectedMealPlan, additionalFoodCost, residencyStatus, creditHours, scholarships]);
 
   const calculateTotalCost = () => {
     let total = 0;
+
+    // Add tuition cost
+    if (residencyStatus && creditHours) {
+      const creditHourRate = residencyStatus === 'in-state' ? 388 : 1108;
+      total += parseFloat(creditHours) * creditHourRate;
+    }
 
     // Add housing cost
     if (housingType === 'on-campus' && roomType) {
@@ -130,53 +139,131 @@ const CostCalculator: React.FC = () => {
       total += parseFloat(additionalFoodCost) * 4;
     }
 
+    // Subtract scholarships
+    if (scholarships) {
+      total -= parseFloat(scholarships);
+    }
+
     setTotalCost(total);
   };
 
   const handleYearChange = (event: SelectChangeEvent) => {
     const year = event.target.value;
     setYearOfStudy(year);
-    
-    if (year === '1') {
-      setHousingType('on-campus');
-      setWantsMealPlan(true); // First years must have a meal plan
-      setStep(3); // Skip housing type question for first years
-    } else {
-      setStep(2);
+  };
+
+  const handleYearSubmit = () => {
+    setStep(2);
+  };
+
+  const handleResidencyChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setResidencyStatus(event.target.value as 'in-state' | 'out-of-state');
+  };
+
+  const handleResidencySubmit = () => {
+    setStep(3);
+  };
+
+  const handleCreditHoursChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const hours = event.target.value;
+    if (!hours || (parseFloat(hours) >= 0 && parseFloat(hours) <= 24)) {
+      setCreditHours(hours);
+    }
+  };
+
+  const handleCreditHoursSubmit = () => {
+    if (creditHours && parseFloat(creditHours) >= 0 && parseFloat(creditHours) <= 24) {
+      if (yearOfStudy === '1') {
+        setHousingType('on-campus');
+        setWantsMealPlan(true);
+        setStep(5);
+      } else {
+        setStep(4);
+      }
     }
   };
 
   const handleHousingTypeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setHousingType(event.target.value as 'on-campus' | 'off-campus');
-    setStep(3);
+  };
+
+  const handleHousingTypeSubmit = () => {
+    setStep(5);
   };
 
   const handleRoomTypeChange = (event: SelectChangeEvent) => {
     setRoomType(event.target.value);
+  };
+
+  const handleRoomTypeSubmit = () => {
     if (yearOfStudy === '1') {
-      setStep(5); // Skip meal plan choice for first years, go straight to plan selection
+      setStep(7);
     } else {
-      setStep(4);
+      setStep(6);
     }
   };
 
   const handleMonthlyRentChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setMonthlyRent(event.target.value);
-    setStep(4);
+  };
+
+  const handleMonthlyRentSubmit = () => {
+    setStep(6);
   };
 
   const handleMealPlanChoice = (event: React.ChangeEvent<HTMLInputElement>) => {
     setWantsMealPlan(event.target.value === 'yes');
-    setStep(5);
+  };
+
+  const handleMealPlanChoiceSubmit = () => {
+    setStep(7);
   };
 
   const handleMealPlanSelection = (event: SelectChangeEvent) => {
     setSelectedMealPlan(event.target.value);
-    setStep(6);
+  };
+
+  const handleMealPlanSelectionSubmit = () => {
+    setStep(8);
   };
 
   const handleAdditionalFoodCost = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setAdditionalFoodCost(event.target.value);
+    const value = event.target.value;
+    if (!value || parseFloat(value) >= 0) {
+      setAdditionalFoodCost(value);
+    }
+  };
+
+  const handleAdditionalFoodSubmit = () => {
+    if (additionalFoodCost && parseFloat(additionalFoodCost) >= 0) {
+      setStep(9);
+    }
+  };
+
+  const handleScholarshipChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const value = event.target.value;
+    if (!value || parseFloat(value) >= 0) {
+      setScholarships(value);
+    }
+  };
+
+  const handleBack = () => {
+    if (step > 1) {
+      // Special handling for first years going back from room selection
+      if (yearOfStudy === '1' && step === 5) {
+        setStep(1);
+        setHousingType('');
+        setWantsMealPlan(null);
+      } 
+      // Special handling for first years going back from meal plan selection
+      else if (yearOfStudy === '1' && step === 7) {
+        setStep(5);
+      }
+      // Default back behavior
+      else {
+        setStep(step - 1);
+      }
+    }
   };
 
   return (
@@ -200,6 +287,17 @@ const CostCalculator: React.FC = () => {
           <Typography variant="h4">
             ${totalCost.toLocaleString()}
           </Typography>
+          {residencyStatus && creditHours && (
+            <Typography variant="body2" sx={{ mt: 1 }}>
+              Tuition ({creditHours} credit hours @ ${residencyStatus === 'in-state' ? '388' : '1,108'}/credit):
+              ${(parseFloat(creditHours) * (residencyStatus === 'in-state' ? 388 : 1108)).toLocaleString()}
+            </Typography>
+          )}
+          {scholarships && parseFloat(scholarships) > 0 && (
+            <Typography variant="body2" color="success.light">
+              Scholarships: -${parseFloat(scholarships).toLocaleString()}
+            </Typography>
+          )}
         </Paper>
 
         <Typography variant="h4" component="h1" gutterBottom>
@@ -214,6 +312,7 @@ const CostCalculator: React.FC = () => {
                 value={yearOfStudy}
                 onChange={handleYearChange}
                 displayEmpty
+                sx={{ mb: 2 }}
               >
                 <MenuItem value="" disabled>Select your year</MenuItem>
                 <MenuItem value="1">First Year</MenuItem>
@@ -222,26 +321,118 @@ const CostCalculator: React.FC = () => {
                 <MenuItem value="4">Fourth Year</MenuItem>
                 <MenuItem value="4+">Fourth Year+</MenuItem>
               </Select>
+              <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
+                <Button 
+                  variant="contained" 
+                  onClick={handleYearSubmit}
+                  disabled={!yearOfStudy}
+                >
+                  Continue
+                </Button>
+              </Box>
             </FormControl>
           </Box>
         )}
 
         {step === 2 && (
           <Box sx={{ mt: 3 }}>
-            <FormControl>
-              <FormLabel>Will you be living on or off campus?</FormLabel>
+            <FormControl fullWidth>
+              <FormLabel>Are you an in-state or out-of-state student?</FormLabel>
               <RadioGroup
-                value={housingType}
-                onChange={handleHousingTypeChange}
+                value={residencyStatus}
+                onChange={handleResidencyChange}
+                sx={{ mb: 2 }}
               >
-                <FormControlLabel value="on-campus" control={<Radio />} label="On Campus" />
-                <FormControlLabel value="off-campus" control={<Radio />} label="Off Campus" />
+                <FormControlLabel value="in-state" control={<Radio />} label="In-State Resident" />
+                <FormControlLabel value="out-of-state" control={<Radio />} label="Out-of-State Student" />
               </RadioGroup>
+              <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
+                <Button 
+                  variant="outlined" 
+                  onClick={handleBack}
+                >
+                  Back
+                </Button>
+                <Button 
+                  variant="contained" 
+                  onClick={handleResidencySubmit}
+                  disabled={!residencyStatus}
+                >
+                  Continue
+                </Button>
+              </Box>
             </FormControl>
           </Box>
         )}
 
-        {step === 3 && housingType === 'on-campus' && (
+        {step === 3 && (
+          <Box sx={{ mt: 3 }}>
+            <FormControl fullWidth>
+              <FormLabel>How many credit hours will you be taking this semester?</FormLabel>
+              <TextField
+                type="number"
+                value={creditHours}
+                onChange={handleCreditHoursChange}
+                placeholder="Enter credit hours (0-24)"
+                inputProps={{
+                  min: 0,
+                  max: 24,
+                  step: 1
+                }}
+                helperText={`Tuition rate: $${residencyStatus === 'in-state' ? '388' : '1,108'} per credit hour`}
+                sx={{ mb: 2 }}
+              />
+              <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
+                <Button 
+                  variant="outlined" 
+                  onClick={handleBack}
+                >
+                  Back
+                </Button>
+                <Button 
+                  variant="contained" 
+                  onClick={handleCreditHoursSubmit}
+                  disabled={!creditHours || parseFloat(creditHours) < 0 || parseFloat(creditHours) > 24}
+                >
+                  Continue
+                </Button>
+              </Box>
+            </FormControl>
+          </Box>
+        )}
+
+        {step === 4 && yearOfStudy !== '1' && (
+          <Box sx={{ mt: 3 }}>
+            <FormControl fullWidth>
+              <FormLabel>Will you be living on or off campus?</FormLabel>
+              <RadioGroup
+                value={housingType}
+                onChange={handleHousingTypeChange}
+                sx={{ mb: 2 }}
+              >
+                <FormControlLabel value="on-campus" control={<Radio />} label="On Campus" />
+                <FormControlLabel value="off-campus" control={<Radio />} label="Off Campus" />
+              </RadioGroup>
+              <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
+                <Button 
+                  variant="outlined" 
+                  onClick={handleBack}
+                >
+                  Back
+                </Button>
+                <Button 
+                  variant="contained" 
+                  onClick={handleHousingTypeSubmit}
+                  disabled={!housingType}
+                >
+                  Continue
+                </Button>
+              </Box>
+            </FormControl>
+          </Box>
+        )}
+
+        {step === 5 && housingType === 'on-campus' && (
           <Box sx={{ mt: 3 }}>
             <FormControl fullWidth>
               <FormLabel>Select your room type:</FormLabel>
@@ -249,6 +440,7 @@ const CostCalculator: React.FC = () => {
                 value={roomType}
                 onChange={handleRoomTypeChange}
                 displayEmpty
+                sx={{ mb: 2 }}
               >
                 <MenuItem value="" disabled>Select room type</MenuItem>
                 {roomRates.map((room) => (
@@ -257,11 +449,26 @@ const CostCalculator: React.FC = () => {
                   </MenuItem>
                 ))}
               </Select>
+              <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
+                <Button 
+                  variant="outlined" 
+                  onClick={handleBack}
+                >
+                  Back
+                </Button>
+                <Button 
+                  variant="contained" 
+                  onClick={handleRoomTypeSubmit}
+                  disabled={!roomType}
+                >
+                  Continue
+                </Button>
+              </Box>
             </FormControl>
           </Box>
         )}
 
-        {step === 3 && housingType === 'off-campus' && (
+        {step === 5 && housingType === 'off-campus' && (
           <Box sx={{ mt: 3 }}>
             <FormControl fullWidth>
               <FormLabel>Estimated monthly rent:</FormLabel>
@@ -273,27 +480,59 @@ const CostCalculator: React.FC = () => {
                 InputProps={{
                   startAdornment: <Typography>$</Typography>,
                 }}
+                sx={{ mb: 2 }}
               />
+              <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
+                <Button 
+                  variant="outlined" 
+                  onClick={handleBack}
+                >
+                  Back
+                </Button>
+                <Button 
+                  variant="contained" 
+                  onClick={handleMonthlyRentSubmit}
+                  disabled={!monthlyRent || parseFloat(monthlyRent) < 0}
+                >
+                  Continue
+                </Button>
+              </Box>
             </FormControl>
           </Box>
         )}
 
-        {step === 4 && yearOfStudy !== '1' && (
+        {step === 6 && yearOfStudy !== '1' && (
           <Box sx={{ mt: 3 }}>
-            <FormControl>
+            <FormControl fullWidth>
               <FormLabel>Will you be purchasing a meal plan?</FormLabel>
               <RadioGroup
                 value={wantsMealPlan ? 'yes' : 'no'}
                 onChange={handleMealPlanChoice}
+                sx={{ mb: 2 }}
               >
                 <FormControlLabel value="yes" control={<Radio />} label="Yes" />
                 <FormControlLabel value="no" control={<Radio />} label="No" />
               </RadioGroup>
+              <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
+                <Button 
+                  variant="outlined" 
+                  onClick={handleBack}
+                >
+                  Back
+                </Button>
+                <Button 
+                  variant="contained" 
+                  onClick={handleMealPlanChoiceSubmit}
+                  disabled={wantsMealPlan === null}
+                >
+                  Continue
+                </Button>
+              </Box>
             </FormControl>
           </Box>
         )}
 
-        {step === 5 && (wantsMealPlan || yearOfStudy === '1') && (
+        {step === 7 && (wantsMealPlan || yearOfStudy === '1') && (
           <Box sx={{ mt: 3 }}>
             <FormControl fullWidth>
               <FormLabel>
@@ -305,6 +544,7 @@ const CostCalculator: React.FC = () => {
                 value={selectedMealPlan}
                 onChange={handleMealPlanSelection}
                 displayEmpty
+                sx={{ mb: 2 }}
               >
                 <MenuItem value="" disabled>Select meal plan</MenuItem>
                 {mealPlans
@@ -333,6 +573,21 @@ const CostCalculator: React.FC = () => {
                     </MenuItem>
                   ))}
               </Select>
+              <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
+                <Button 
+                  variant="outlined" 
+                  onClick={handleBack}
+                >
+                  Back
+                </Button>
+                <Button 
+                  variant="contained" 
+                  onClick={handleMealPlanSelectionSubmit}
+                  disabled={!selectedMealPlan}
+                >
+                  Continue
+                </Button>
+              </Box>
               {yearOfStudy === '1' && (
                 <Typography variant="body2" color="error" sx={{ mt: 1 }}>
                   Note: First-year students are required to purchase an Unlimited meal plan
@@ -342,7 +597,7 @@ const CostCalculator: React.FC = () => {
           </Box>
         )}
 
-        {step === 6 && (
+        {step === 8 && (
           <Box sx={{ mt: 3 }}>
             <FormControl fullWidth>
               <FormLabel>
@@ -358,7 +613,56 @@ const CostCalculator: React.FC = () => {
                 InputProps={{
                   startAdornment: <Typography>$</Typography>,
                 }}
+                sx={{ mb: 2 }}
               />
+              <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
+                <Button 
+                  variant="outlined" 
+                  onClick={handleBack}
+                >
+                  Back
+                </Button>
+                <Button 
+                  variant="contained" 
+                  onClick={handleAdditionalFoodSubmit}
+                  disabled={!additionalFoodCost || parseFloat(additionalFoodCost) < 0}
+                >
+                  Continue
+                </Button>
+              </Box>
+            </FormControl>
+          </Box>
+        )}
+
+        {step === 9 && (
+          <Box sx={{ mt: 3 }}>
+            <FormControl fullWidth>
+              <FormLabel>Estimated total scholarships for the semester:</FormLabel>
+              <TextField
+                type="number"
+                value={scholarships}
+                onChange={handleScholarshipChange}
+                placeholder="Enter scholarship amount"
+                InputProps={{
+                  startAdornment: <Typography>$</Typography>,
+                }}
+                sx={{ mb: 2 }}
+              />
+              <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
+                <Button 
+                  variant="outlined" 
+                  onClick={handleBack}
+                >
+                  Back
+                </Button>
+                <Button 
+                  variant="contained" 
+                  onClick={() => setStep(10)}
+                  disabled={scholarships !== '' && parseFloat(scholarships) < 0}
+                >
+                  Finish
+                </Button>
+              </Box>
             </FormControl>
           </Box>
         )}
