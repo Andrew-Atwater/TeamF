@@ -105,6 +105,8 @@ const Home: React.FC = () => {
     monthlyPayment: null
   });
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [isPendingPayment, setIsPendingPayment] = useState<Account | null>(null);
+  const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState<boolean>(false);
   
   const navigate = useNavigate();
 
@@ -192,13 +194,22 @@ const Home: React.FC = () => {
         account.monthlyPayment && 
         account.monthlyPayment.amount > 0 &&
         account.monthlyPayment.linkedAccountId &&
-        account.monthlyPayment.nextPaymentDate
+        account.dueDate // Ensure account has a due date
       );
 
       for (const debtAccount of debtAccounts) {
-        const nextPaymentDate = new Date(debtAccount.monthlyPayment!.nextPaymentDate + 'T00:00:00');
-        
-        if (nextPaymentDate <= today) {
+        // Get the current month's due date
+        const currentDueDate = new Date(debtAccount.dueDate + 'T00:00:00');
+        currentDueDate.setMonth(today.getMonth());
+        currentDueDate.setFullYear(today.getFullYear());
+
+        // If we've passed last month's due date, use this month's due date
+        if (currentDueDate < today) {
+          currentDueDate.setMonth(currentDueDate.getMonth() + 1);
+        }
+
+        // Check if payment is due today
+        if (today.getTime() === currentDueDate.getTime()) {
           const linkedAccount = accounts.find(acc => acc.id === debtAccount.monthlyPayment!.linkedAccountId);
           
           if (linkedAccount && linkedAccount.id && debtAccount.id) {
@@ -212,14 +223,14 @@ const Home: React.FC = () => {
             const savingsRef = doc(db, 'accounts', linkedAccount.id);
             const newSavingsBalance = linkedAccount.balance - paymentAmount;
             
-            // Calculate next payment date (same day next month)
-            const nextDate = new Date(nextPaymentDate);
-            nextDate.setMonth(nextDate.getMonth() + 1);
+            // Calculate next payment date (next month's due date)
+            const nextDueDate = new Date(currentDueDate);
+            nextDueDate.setMonth(nextDueDate.getMonth() + 1);
             
             // Update accounts
             await updateDoc(debtRef, {
               balance: newDebtBalance,
-              'monthlyPayment.nextPaymentDate': nextDate.toISOString().split('T')[0]
+              'monthlyPayment.nextPaymentDate': nextDueDate.toISOString().split('T')[0]
             });
             
             await updateDoc(savingsRef, {
@@ -504,6 +515,69 @@ const Home: React.FC = () => {
     }));
   };
 
+  const handleEarlyPaymentClick = (account: Account, e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent card click in edit mode
+    setIsPendingPayment(account);
+    setIsPaymentDialogOpen(true);
+  };
+
+  const handleEarlyPayment = async (account: Account) => {
+    if (!account.monthlyPayment || !account.id) return;
+
+    const linkedAccount = accounts.find(acc => acc.id === account.monthlyPayment?.linkedAccountId);
+    
+    if (!linkedAccount || !linkedAccount.id || linkedAccount.balance < account.monthlyPayment.amount) {
+      return; // Insufficient funds or invalid linked account
+    }
+
+    try {
+      const paymentAmount = account.monthlyPayment.amount;
+      
+      // Update debt account
+      const debtRef = doc(db, 'accounts', account.id);
+      const newDebtBalance = account.balance + paymentAmount;
+      
+      // Update savings account
+      const savingsRef = doc(db, 'accounts', linkedAccount.id);
+      const newSavingsBalance = linkedAccount.balance - paymentAmount;
+      
+      // Calculate next payment date (one month from original due date)
+      const currentDueDate = new Date(account.dueDate + 'T00:00:00');
+      const nextDueDate = new Date(currentDueDate);
+      nextDueDate.setMonth(nextDueDate.getMonth() + 1);
+      
+      // Update accounts
+      await updateDoc(debtRef, {
+        balance: newDebtBalance,
+        'monthlyPayment.nextPaymentDate': nextDueDate.toISOString().split('T')[0]
+      });
+      
+      await updateDoc(savingsRef, {
+        balance: newSavingsBalance
+      });
+      
+      // Add transaction record
+      await addTransaction({
+        accountId: account.id,
+        accountName: account.name,
+        userId: user.uid,
+        type: 'update',
+        previousBalance: account.balance,
+        newBalance: newDebtBalance,
+        description: `Early payment from ${linkedAccount.name} to ${account.name}`
+      });
+
+      // Refresh accounts
+      fetchAccounts(user.uid);
+    } catch (error) {
+      console.error('Error processing early payment:', error);
+    } finally {
+      // Clear pending payment and close dialog
+      setIsPendingPayment(null);
+      setIsPaymentDialogOpen(false);
+    }
+  };
+
   const menuItems = [
     { 
       icon: <AddCircleIcon />, 
@@ -745,9 +819,28 @@ const Home: React.FC = () => {
                 )}
                 {account.monthlyPayment && account.monthlyPayment.amount > 0 && (
                   <Box sx={{ mt: 2 }}>
-                    <Typography variant="body2" color="text.secondary">
-                      Monthly Payment: ${account.monthlyPayment.amount.toFixed(2)}
-                    </Typography>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                      <Typography variant="body2" color="text.secondary">
+                        Monthly Payment: ${account.monthlyPayment.amount.toFixed(2)}
+                      </Typography>
+                      {!isEditMode && account.type === 'debt' && (
+                        <Button
+                          variant="contained"
+                          color="primary"
+                          size="small"
+                          onClick={(e) => handleEarlyPaymentClick(account, e)}
+                          disabled={
+                            !accounts.find(
+                              acc => 
+                                acc.id === account.monthlyPayment?.linkedAccountId && 
+                                acc.balance >= (account.monthlyPayment?.amount || 0)
+                            )
+                          }
+                        >
+                          Pay Now
+                        </Button>
+                      )}
+                    </Box>
                     <Typography variant="body2" color="text.secondary">
                       Next Payment: {new Date(account.monthlyPayment.nextPaymentDate + 'T00:00:00').toLocaleDateString()}
                     </Typography>
@@ -1132,6 +1225,69 @@ const Home: React.FC = () => {
               disabled={accounts.filter(acc => acc.type === selectedAccount?.type && acc.id !== selectedAccount?.id).length > 0 && !sweepTargetAccountId}
             >
               Yes
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* Early Payment Confirmation Dialog */}
+        <Dialog
+          open={isPaymentDialogOpen}
+          onClose={() => {
+            setIsPaymentDialogOpen(false);
+            setIsPendingPayment(null);
+          }}
+        >
+          <DialogTitle>Confirm Early Payment</DialogTitle>
+          <DialogContent>
+            {isPendingPayment && isPendingPayment.monthlyPayment && (
+              <>
+                <Typography variant="body1" gutterBottom>
+                  Are you sure you want to make an early payment of ${isPendingPayment.monthlyPayment.amount.toFixed(2)} to {isPendingPayment.name}?
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  This will:
+                </Typography>
+                <List>
+                  <ListItem>
+                    <ListItemText 
+                      primary={`Transfer $${isPendingPayment.monthlyPayment.amount.toFixed(2)} from ${
+                        accounts.find(acc => acc.id === isPendingPayment.monthlyPayment?.linkedAccountId)?.name
+                      }`}
+                    />
+                  </ListItem>
+                  <ListItem>
+                    <ListItemText 
+                      primary="Process the payment immediately"
+                    />
+                  </ListItem>
+                  <ListItem>
+                    <ListItemText 
+                      primary={`Set the next payment date to ${
+                        new Date(new Date(isPendingPayment.dueDate + 'T00:00:00').setMonth(
+                          new Date(isPendingPayment.dueDate + 'T00:00:00').getMonth() + 1
+                        )).toLocaleDateString()
+                      }`}
+                    />
+                  </ListItem>
+                </List>
+              </>
+            )}
+          </DialogContent>
+          <DialogActions>
+            <Button 
+              onClick={() => {
+                setIsPaymentDialogOpen(false);
+                setIsPendingPayment(null);
+              }}
+            >
+              Cancel
+            </Button>
+            <Button 
+              variant="contained" 
+              color="primary"
+              onClick={() => isPendingPayment && handleEarlyPayment(isPendingPayment)}
+            >
+              Confirm Payment
             </Button>
           </DialogActions>
         </Dialog>
