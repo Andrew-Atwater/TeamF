@@ -19,10 +19,12 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '22.x'
+          node-version: '20.x'
 
       - name: Install dependencies
         run: npm install
 
       - name: Run tests
-        run: npm test -- --watchAll=false --ci --passWithNoTests --reporters=default jest-junit --reporters=jest-junit --testResultsProcessor
+        run: npm test -- --ci --coverage --testLocationInResults --reporters=default
+        env:
+          CI: true
