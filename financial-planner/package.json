@@ -40,8 +40,21 @@
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
-    "test": "react-scripts test --testMatch \"**/?(*.)+(spec|test).[jt]s?(x)\" --transformIgnorePatterns \"node_modules/(?!@firebase)/\"",
+    "test": "jest --verbose",
     "eject": "react-scripts eject"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "testMatch": [
+      "**/__tests__/**/*.test.js",
+      "**/?(*.)+(spec|test).[jt]s?(x)"
+    ],
+    "collectCoverage": true,
+    "coverageReporters": [
+      "text",
+      "lcov"
+    ],
+    "coverageDirectory": "coverage"
   },
   "eslintConfig": {
     "extends": [
