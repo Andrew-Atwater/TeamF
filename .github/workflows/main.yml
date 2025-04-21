@@ -28,7 +28,7 @@ jobs:
 
       - name: Run tests
         working-directory: ./financial-planner
-        run: npm test -- --watchAll=false --ci --coverage
+        run: npm test
         env:
           CI: true
           NODE_ENV: test
