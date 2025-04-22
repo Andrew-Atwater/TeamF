@@ -44,7 +44,7 @@
     "eject": "react-scripts eject"
   },
   "jest": {
-    "testEnvironment": "jsdom",
+    "testEnvironment": "node",
     "testMatch": [
       "**/src/__tests__/**/*.test.tsx",
       "**/src/**/?(*.)+(spec|test).tsx"
