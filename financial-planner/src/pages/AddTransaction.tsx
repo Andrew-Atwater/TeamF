@@ -14,6 +14,10 @@ import {
   Toolbar,
   IconButton,
   SelectChangeEvent,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
 } from '@mui/material';
 import { ArrowBack as ArrowBackIcon } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
@@ -29,8 +33,9 @@ interface Account {
 
 interface TransactionForm {
   accountId: string;
-  amount: number;
+  amount: number | '';
   description: string;
+  transactionType: 'deposit' | 'withdraw' | 'payoff';
 }
 
 const AddTransaction: React.FC = () => {
@@ -38,10 +43,12 @@ const AddTransaction: React.FC = () => {
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [formData, setFormData] = useState<TransactionForm>({
     accountId: '',
-    amount: 0,
+    amount: '',
     description: '',
+    transactionType: 'deposit',
   });
   const [loading, setLoading] = useState(true);
+  const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
 
   useEffect(() => {
     const fetchAccounts = async () => {
@@ -70,15 +77,31 @@ const AddTransaction: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!auth.currentUser) return;
+    if (!auth.currentUser || formData.amount === '') return;
+    setIsConfirmDialogOpen(true);
+  };
+
+  const handleConfirmSubmit = async () => {
+    if (!auth.currentUser || formData.amount === '') return;
 
     try {
       const account = accounts.find(a => a.id === formData.accountId);
       if (!account) return;
 
+      // Calculate the amount based on transaction type
+      let amount = formData.amount;
+      if (account.type === 'debt') {
+        amount = Math.abs(amount); // For debt accounts, we subtract the payment amount
+      } else {
+        amount = formData.transactionType === 'deposit' ? Math.abs(amount) : -Math.abs(amount);
+      }
+
       // Update account balance
       const accountRef = doc(db, 'accounts', formData.accountId);
-      const newBalance = account.balance + formData.amount;
+      const newBalance = account.type === 'debt' 
+        ? account.balance + amount // For debt accounts, adding a positive amount reduces the debt
+        : account.balance + amount; // For savings accounts, logic remains the same
+
       await updateDoc(accountRef, { balance: newBalance });
 
       // Add transaction record
@@ -98,23 +121,59 @@ const AddTransaction: React.FC = () => {
       navigate('/');
     } catch (error) {
       console.error('Error adding transaction:', error);
+    } finally {
+      setIsConfirmDialogOpen(false);
     }
   };
 
   const handleSelectChange = (e: SelectChangeEvent<string>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name as string]: value
-    }));
+    
+    if (name === 'accountId') {
+      const selectedAccount = accounts.find(a => a.id === value);
+      setFormData(prev => ({
+        ...prev,
+        accountId: value,
+        transactionType: selectedAccount?.type === 'debt' ? 'payoff' : 'deposit'
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [name as string]: value
+      }));
+    }
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: name === 'amount' ? parseFloat(value) || 0 : value
+      [name]: name === 'amount' ? (value === '' ? '' : parseFloat(value)) : value
     }));
+  };
+
+  const getTransactionTypeOptions = () => {
+    const selectedAccount = accounts.find(a => a.id === formData.accountId);
+    if (!selectedAccount) return [];
+
+    if (selectedAccount.type === 'debt') {
+      return [{ value: 'payoff', label: 'Debt Payment' }];
+    } else {
+      return [
+        { value: 'deposit', label: 'Deposit' },
+        { value: 'withdraw', label: 'Withdraw' }
+      ];
+    }
+  };
+
+  const getSelectedAccount = () => {
+    return accounts.find(a => a.id === formData.accountId);
+  };
+
+  const getTransactionTypeLabel = () => {
+    const options = getTransactionTypeOptions();
+    const option = options.find(opt => opt.value === formData.transactionType);
+    return option ? option.label : '';
   };
 
   return (
@@ -156,6 +215,25 @@ const AddTransaction: React.FC = () => {
                 </Select>
               </FormControl>
 
+              {formData.accountId && (
+                <FormControl fullWidth sx={{ mb: 2 }}>
+                  <InputLabel>Transaction Type</InputLabel>
+                  <Select
+                    name="transactionType"
+                    value={formData.transactionType}
+                    label="Transaction Type"
+                    onChange={handleSelectChange}
+                    required
+                  >
+                    {getTransactionTypeOptions().map((option) => (
+                      <MenuItem key={option.value} value={option.value}>
+                        {option.label}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              )}
+
               <TextField
                 fullWidth
                 label="Amount"
@@ -184,14 +262,43 @@ const AddTransaction: React.FC = () => {
                 variant="contained"
                 color="primary"
                 fullWidth
-                disabled={loading || !formData.accountId || !formData.amount || !formData.description}
+                disabled={loading || !formData.accountId || formData.amount === '' || !formData.description}
               >
-                Add Transaction
+                Confirm Transaction
               </Button>
             </form>
           </Paper>
         </Box>
       </Container>
+
+      <Dialog open={isConfirmDialogOpen} onClose={() => setIsConfirmDialogOpen(false)}>
+        <DialogTitle>Confirm Transaction</DialogTitle>
+        <DialogContent>
+          <Box sx={{ mt: 2 }}>
+            <Typography variant="body1" gutterBottom>
+              <strong>Account:</strong> {getSelectedAccount()?.name}
+            </Typography>
+            <Typography variant="body1" gutterBottom>
+              <strong>Transaction Type:</strong> {getTransactionTypeLabel()}
+            </Typography>
+            <Typography variant="body1" gutterBottom>
+              <strong>Amount:</strong> ${typeof formData.amount === 'number' ? Math.abs(formData.amount).toFixed(2) : '0.00'}
+            </Typography>
+            <Typography variant="body1" gutterBottom>
+              <strong>Description:</strong> {formData.description}
+            </Typography>
+            <Typography variant="body1" sx={{ mt: 2, color: 'text.secondary' }}>
+              Please review the transaction details before confirming.
+            </Typography>
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setIsConfirmDialogOpen(false)}>Cancel</Button>
+          <Button onClick={handleConfirmSubmit} variant="contained" color="primary">
+            Confirm Transaction
+          </Button>
+        </DialogActions>
+      </Dialog>
     </>
   );
 };
