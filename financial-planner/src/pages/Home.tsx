@@ -356,24 +356,40 @@ const Home: React.FC = () => {
       const accountSnapshot = await getDocs(query(collection(db, 'accounts'), where('__name__', '==', selectedAccount.id)));
       const previousBalance = accountSnapshot.docs[0]?.data().balance || 0;
       
-      await updateDoc(accountRef, {
-        name: selectedAccount.name,
-        description: selectedAccount.description,
-        balance: newBalance,
-        dueDate: selectedAccount.dueDate,
-        type: selectedAccount.type
-      });
-      
-      // Add transaction record
-      await addTransaction({
-        accountId: selectedAccount.id,
-        accountName: selectedAccount.name,
-        userId: user.uid,
-        type: 'update',
-        previousBalance: previousBalance,
-        newBalance: newBalance,
-        description: `Updated account ${selectedAccount.name}`
-      });
+      // If it's a debt account and balance is 0, delete it
+      if (selectedAccount.type === 'debt' && newBalance === 0) {
+        await deleteDoc(accountRef);
+        
+        // Add transaction record for deletion
+        await addTransaction({
+          accountId: selectedAccount.id,
+          accountName: selectedAccount.name,
+          userId: user.uid,
+          type: 'delete',
+          previousBalance: previousBalance,
+          newBalance: 0,
+          description: `Paid off and deleted account ${selectedAccount.name}`
+        });
+      } else {
+        await updateDoc(accountRef, {
+          name: selectedAccount.name,
+          description: selectedAccount.description,
+          balance: newBalance,
+          dueDate: selectedAccount.dueDate,
+          type: selectedAccount.type
+        });
+        
+        // Add transaction record
+        await addTransaction({
+          accountId: selectedAccount.id,
+          accountName: selectedAccount.name,
+          userId: user.uid,
+          type: 'update',
+          previousBalance: previousBalance,
+          newBalance: newBalance,
+          description: `Updated account ${selectedAccount.name}`
+        });
+      }
       
       setIsEditDialogOpen(false);
       setSelectedAccount(null);
