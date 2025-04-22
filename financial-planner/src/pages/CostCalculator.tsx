@@ -19,7 +19,11 @@ import {
   ListItem,
   ListItemText,
   Divider,
+  AppBar,
+  Toolbar,
+  IconButton
 } from '@mui/material';
+import { ArrowBack as ArrowBackIcon } from '@mui/icons-material';
 
 interface RoomRate {
   type: string;
@@ -406,710 +410,544 @@ const CostCalculator: React.FC = () => {
   );
 
   return (
-    <Container maxWidth="sm">
-      <Box sx={{ mt: 4, mb: 4, position: 'relative' }}>
-        <Paper 
-          elevation={3} 
-          sx={{ 
-            position: 'fixed', 
-            top: 20, 
-            right: 20, 
-            padding: 2,
-            zIndex: 1000,
-            backgroundColor: 'primary.main',
-            color: 'white'
-          }}
-        >
-          <Typography variant="h6">
-            Estimated Semester Cost:
+    <Box sx={{ flexGrow: 1 }}>
+      <AppBar position="static">
+        <Toolbar>
+          <IconButton
+            edge="start"
+            color="inherit"
+            onClick={() => navigate('/')}
+            sx={{ mr: 2 }}
+          >
+            <ArrowBackIcon />
+          </IconButton>
+          <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+            Tuition Cost Calculator
           </Typography>
-          <Typography variant="h4">
-            ${totalCost.toLocaleString()}
+        </Toolbar>
+      </AppBar>
+
+      <Container maxWidth="sm">
+        <Box sx={{ mt: 4, mb: 4, position: 'relative' }}>
+          <Paper 
+            elevation={3} 
+            sx={{ 
+              position: 'fixed', 
+              top: 20, 
+              right: 20, 
+              padding: 2,
+              zIndex: 1000,
+              backgroundColor: 'primary.main',
+              color: 'white'
+            }}
+          >
+            <Typography variant="h6">
+              Estimated Semester Cost:
+            </Typography>
+            <Typography variant="h4">
+              ${totalCost.toLocaleString()}
+            </Typography>
+            {residencyStatus && creditHours && (
+              <Typography variant="body2" sx={{ mt: 1 }}>
+                Tuition ({creditHours} credit hours @ ${residencyStatus === 'in-state' ? '388' : '1,108'}/credit):
+                ${(parseFloat(creditHours) * (residencyStatus === 'in-state' ? 388 : 1108)).toLocaleString()}
+              </Typography>
+            )}
+            {scholarships && parseFloat(scholarships) > 0 && (
+              <Typography variant="body2" color="success.light">
+                Scholarships: -${parseFloat(scholarships).toLocaleString()}
+              </Typography>
+            )}
+          </Paper>
+
+          <Typography variant="h4" component="h1" gutterBottom>
+            Cost Calculator
           </Typography>
-          {residencyStatus && creditHours && (
-            <Typography variant="body2" sx={{ mt: 1 }}>
-              Tuition ({creditHours} credit hours @ ${residencyStatus === 'in-state' ? '388' : '1,108'}/credit):
-              ${(parseFloat(creditHours) * (residencyStatus === 'in-state' ? 388 : 1108)).toLocaleString()}
-            </Typography>
+
+          {step === 1 && (
+            <Box sx={{ mt: 3 }}>
+              <FormControl fullWidth>
+                <FormLabel>What year of school will you be entering?</FormLabel>
+                <Select
+                  value={yearOfStudy}
+                  onChange={handleYearChange}
+                  displayEmpty
+                  sx={{ mb: 2 }}
+                >
+                  <MenuItem value="" disabled>Select your year</MenuItem>
+                  <MenuItem value="1">First Year</MenuItem>
+                  <MenuItem value="2">Second Year</MenuItem>
+                  <MenuItem value="3">Third Year</MenuItem>
+                  <MenuItem value="4">Fourth Year</MenuItem>
+                  <MenuItem value="4+">Fourth Year+</MenuItem>
+                </Select>
+                <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
+                  <Button 
+                    variant="contained" 
+                    onClick={handleYearSubmit}
+                    disabled={!yearOfStudy}
+                  >
+                    Continue
+                  </Button>
+                </Box>
+              </FormControl>
+            </Box>
           )}
-          {scholarships && parseFloat(scholarships) > 0 && (
-            <Typography variant="body2" color="success.light">
-              Scholarships: -${parseFloat(scholarships).toLocaleString()}
-            </Typography>
+
+          {step === 2 && (
+            <Box sx={{ mt: 3 }}>
+              <FormControl fullWidth>
+                <FormLabel>Are you an in-state or out-of-state student?</FormLabel>
+                <RadioGroup
+                  value={residencyStatus}
+                  onChange={handleResidencyChange}
+                  sx={{ mb: 2 }}
+                >
+                  <FormControlLabel value="in-state" control={<Radio />} label="In-State Resident" />
+                  <FormControlLabel value="out-of-state" control={<Radio />} label="Out-of-State Student" />
+                </RadioGroup>
+                <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
+                  <Button 
+                    variant="outlined" 
+                    onClick={handleBack}
+                  >
+                    Back
+                  </Button>
+                  <Button 
+                    variant="contained" 
+                    onClick={handleResidencySubmit}
+                    disabled={!residencyStatus}
+                  >
+                    Continue
+                  </Button>
+                </Box>
+              </FormControl>
+            </Box>
           )}
-        </Paper>
 
-        <Typography variant="h4" component="h1" gutterBottom>
-          Cost Calculator
-        </Typography>
+          {step === 3 && (
+            <Box sx={{ mt: 3 }}>
+              <FormControl fullWidth>
+                <FormLabel>How many credit hours will you be taking this semester?</FormLabel>
+                <TextField
+                  type="number"
+                  value={creditHours}
+                  onChange={handleCreditHoursChange}
+                  placeholder="Enter credit hours (0-24)"
+                  inputProps={{
+                    min: 0,
+                    max: 24,
+                    step: 1
+                  }}
+                  helperText={`Tuition rate: $${residencyStatus === 'in-state' ? '388' : '1,108'} per credit hour`}
+                  sx={{ mb: 2 }}
+                />
+                <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
+                  <Button 
+                    variant="outlined" 
+                    onClick={handleBack}
+                  >
+                    Back
+                  </Button>
+                  <Button 
+                    variant="contained" 
+                    onClick={handleCreditHoursSubmit}
+                    disabled={!creditHours || parseFloat(creditHours) < 0 || parseFloat(creditHours) > 24}
+                  >
+                    Continue
+                  </Button>
+                </Box>
+              </FormControl>
+            </Box>
+          )}
 
-        {step === 1 && (
-          <Box sx={{ mt: 3 }}>
-            <FormControl fullWidth>
-              <FormLabel>What year of school will you be entering?</FormLabel>
-              <Select
-                value={yearOfStudy}
-                onChange={handleYearChange}
-                displayEmpty
-                sx={{ mb: 2 }}
-              >
-                <MenuItem value="" disabled>Select your year</MenuItem>
-                <MenuItem value="1">First Year</MenuItem>
-                <MenuItem value="2">Second Year</MenuItem>
-                <MenuItem value="3">Third Year</MenuItem>
-                <MenuItem value="4">Fourth Year</MenuItem>
-                <MenuItem value="4+">Fourth Year+</MenuItem>
-              </Select>
-              <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
-                <Button 
-                  variant="contained" 
-                  onClick={handleYearSubmit}
-                  disabled={!yearOfStudy}
+          {step === 4 && yearOfStudy !== '1' && (
+            <Box sx={{ mt: 3 }}>
+              <FormControl fullWidth>
+                <FormLabel>Will you be living on or off campus?</FormLabel>
+                <RadioGroup
+                  value={housingType}
+                  onChange={handleHousingTypeChange}
+                  sx={{ mb: 2 }}
                 >
-                  Continue
-                </Button>
-              </Box>
-            </FormControl>
-          </Box>
-        )}
+                  <FormControlLabel value="on-campus" control={<Radio />} label="On Campus" />
+                  <FormControlLabel value="off-campus" control={<Radio />} label="Off Campus" />
+                </RadioGroup>
+                <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
+                  <Button 
+                    variant="outlined" 
+                    onClick={handleBack}
+                  >
+                    Back
+                  </Button>
+                  <Button 
+                    variant="contained" 
+                    onClick={handleHousingTypeSubmit}
+                    disabled={!housingType}
+                  >
+                    Continue
+                  </Button>
+                </Box>
+              </FormControl>
+            </Box>
+          )}
 
-        {step === 2 && (
-          <Box sx={{ mt: 3 }}>
-            <FormControl fullWidth>
-              <FormLabel>Are you an in-state or out-of-state student?</FormLabel>
-              <RadioGroup
-                value={residencyStatus}
-                onChange={handleResidencyChange}
-                sx={{ mb: 2 }}
-              >
-                <FormControlLabel value="in-state" control={<Radio />} label="In-State Resident" />
-                <FormControlLabel value="out-of-state" control={<Radio />} label="Out-of-State Student" />
-              </RadioGroup>
-              <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
-                <Button 
-                  variant="outlined" 
-                  onClick={handleBack}
+          {step === 5 && housingType === 'on-campus' && (
+            <Box sx={{ mt: 3 }}>
+              <FormControl fullWidth>
+                <FormLabel>Select your room type:</FormLabel>
+                <Select
+                  value={roomType}
+                  onChange={handleRoomTypeChange}
+                  displayEmpty
+                  sx={{ mb: 2 }}
                 >
-                  Back
-                </Button>
-                <Button 
-                  variant="contained" 
-                  onClick={handleResidencySubmit}
-                  disabled={!residencyStatus}
-                >
-                  Continue
-                </Button>
-              </Box>
-            </FormControl>
-          </Box>
-        )}
-
-        {step === 3 && (
-          <Box sx={{ mt: 3 }}>
-            <FormControl fullWidth>
-              <FormLabel>How many credit hours will you be taking this semester?</FormLabel>
-              <TextField
-                type="number"
-                value={creditHours}
-                onChange={handleCreditHoursChange}
-                placeholder="Enter credit hours (0-24)"
-                inputProps={{
-                  min: 0,
-                  max: 24,
-                  step: 1
-                }}
-                helperText={`Tuition rate: $${residencyStatus === 'in-state' ? '388' : '1,108'} per credit hour`}
-                sx={{ mb: 2 }}
-              />
-              <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
-                <Button 
-                  variant="outlined" 
-                  onClick={handleBack}
-                >
-                  Back
-                </Button>
-                <Button 
-                  variant="contained" 
-                  onClick={handleCreditHoursSubmit}
-                  disabled={!creditHours || parseFloat(creditHours) < 0 || parseFloat(creditHours) > 24}
-                >
-                  Continue
-                </Button>
-              </Box>
-            </FormControl>
-          </Box>
-        )}
-
-        {step === 4 && yearOfStudy !== '1' && (
-          <Box sx={{ mt: 3 }}>
-            <FormControl fullWidth>
-              <FormLabel>Will you be living on or off campus?</FormLabel>
-              <RadioGroup
-                value={housingType}
-                onChange={handleHousingTypeChange}
-                sx={{ mb: 2 }}
-              >
-                <FormControlLabel value="on-campus" control={<Radio />} label="On Campus" />
-                <FormControlLabel value="off-campus" control={<Radio />} label="Off Campus" />
-              </RadioGroup>
-              <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
-                <Button 
-                  variant="outlined" 
-                  onClick={handleBack}
-                >
-                  Back
-                </Button>
-                <Button 
-                  variant="contained" 
-                  onClick={handleHousingTypeSubmit}
-                  disabled={!housingType}
-                >
-                  Continue
-                </Button>
-              </Box>
-            </FormControl>
-          </Box>
-        )}
-
-        {step === 5 && housingType === 'on-campus' && (
-          <Box sx={{ mt: 3 }}>
-            <FormControl fullWidth>
-              <FormLabel>Select your room type:</FormLabel>
-              <Select
-                value={roomType}
-                onChange={handleRoomTypeChange}
-                displayEmpty
-                sx={{ mb: 2 }}
-              >
-                <MenuItem value="" disabled>Select room type</MenuItem>
-                {roomRates.map((room) => (
-                  <MenuItem key={room.type} value={room.type}>
-                    {room.type} - ${room.rate}/semester
-                  </MenuItem>
-                ))}
-              </Select>
-              <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
-                <Button 
-                  variant="outlined" 
-                  onClick={handleBack}
-                >
-                  Back
-                </Button>
-                <Button 
-                  variant="contained" 
-                  onClick={handleRoomTypeSubmit}
-                  disabled={!roomType}
-                >
-                  Continue
-                </Button>
-              </Box>
-            </FormControl>
-          </Box>
-        )}
-
-        {step === 5 && housingType === 'off-campus' && (
-          <Box sx={{ mt: 3 }}>
-            <FormControl fullWidth>
-              <FormLabel>Estimated monthly rent:</FormLabel>
-              <TextField
-                type="number"
-                value={monthlyRent}
-                onChange={handleMonthlyRentChange}
-                placeholder="Enter monthly rent"
-                InputProps={{
-                  startAdornment: <Typography>$</Typography>,
-                }}
-                sx={{ mb: 2 }}
-              />
-              <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
-                <Button 
-                  variant="outlined" 
-                  onClick={handleBack}
-                >
-                  Back
-                </Button>
-                <Button 
-                  variant="contained" 
-                  onClick={handleMonthlyRentSubmit}
-                  disabled={!monthlyRent || parseFloat(monthlyRent) < 0}
-                >
-                  Continue
-                </Button>
-              </Box>
-            </FormControl>
-          </Box>
-        )}
-
-        {step === 6 && yearOfStudy !== '1' && (
-          <Box sx={{ mt: 3 }}>
-            <FormControl fullWidth>
-              <FormLabel>Will you be purchasing a meal plan?</FormLabel>
-              <RadioGroup
-                value={wantsMealPlan ? 'yes' : 'no'}
-                onChange={handleMealPlanChoice}
-                sx={{ mb: 2 }}
-              >
-                <FormControlLabel value="yes" control={<Radio />} label="Yes" />
-                <FormControlLabel value="no" control={<Radio />} label="No" />
-              </RadioGroup>
-              <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
-                <Button 
-                  variant="outlined" 
-                  onClick={handleBack}
-                >
-                  Back
-                </Button>
-                <Button 
-                  variant="contained" 
-                  onClick={handleMealPlanChoiceSubmit}
-                  disabled={wantsMealPlan === null}
-                >
-                  Continue
-                </Button>
-              </Box>
-            </FormControl>
-          </Box>
-        )}
-
-        {step === 7 && (wantsMealPlan || yearOfStudy === '1') && (
-          <Box sx={{ mt: 3 }}>
-            <FormControl fullWidth>
-              <FormLabel>
-                {yearOfStudy === '1' 
-                  ? "Select your meal plan (First-year students must choose an Unlimited plan):"
-                  : "Select your meal plan:"}
-              </FormLabel>
-              <Select
-                value={selectedMealPlan}
-                onChange={handleMealPlanSelection}
-                displayEmpty
-                sx={{ mb: 2 }}
-              >
-                <MenuItem value="" disabled>Select meal plan</MenuItem>
-                {mealPlans
-                  .filter(plan => yearOfStudy === '1' 
-                    ? plan.type.startsWith('Unlimited') 
-                    : true)
-                  .map((plan) => (
-                    <MenuItem 
-                      key={plan.type} 
-                      value={plan.type}
-                    >
-                      <Box>
-                        <Typography variant="subtitle1">
-                          {plan.type} - ${plan.rate}/semester
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                          {plan.description}
-                        </Typography>
-                      </Box>
+                  <MenuItem value="" disabled>Select room type</MenuItem>
+                  {roomRates.map((room) => (
+                    <MenuItem key={room.type} value={room.type}>
+                      {room.type} - ${room.rate}/semester
                     </MenuItem>
                   ))}
-              </Select>
-              <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
-                <Button 
-                  variant="outlined" 
-                  onClick={handleBack}
-                >
-                  Back
-                </Button>
-                <Button 
-                  variant="contained" 
-                  onClick={handleMealPlanSelectionSubmit}
-                  disabled={!selectedMealPlan}
-                >
-                  Continue
-                </Button>
-              </Box>
-              {yearOfStudy === '1' && (
-                <Typography variant="body2" color="error" sx={{ mt: 1 }}>
-                  Note: First-year students are required to purchase an Unlimited meal plan
-                </Typography>
-              )}
-            </FormControl>
-          </Box>
-        )}
+                </Select>
+                <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
+                  <Button 
+                    variant="outlined" 
+                    onClick={handleBack}
+                  >
+                    Back
+                  </Button>
+                  <Button 
+                    variant="contained" 
+                    onClick={handleRoomTypeSubmit}
+                    disabled={!roomType}
+                  >
+                    Continue
+                  </Button>
+                </Box>
+              </FormControl>
+            </Box>
+          )}
 
-        {step === 8 && (
-          <Box sx={{ mt: 3 }}>
-            <FormControl fullWidth>
-              <FormLabel>
-                {wantsMealPlan 
-                  ? "Estimated monthly spending on food outside of meal plan:"
-                  : "Estimated monthly spending on groceries:"}
-              </FormLabel>
-              <TextField
-                type="number"
-                value={additionalFoodCost}
-                onChange={handleAdditionalFoodCost}
-                placeholder="Enter monthly food cost"
-                InputProps={{
-                  startAdornment: <Typography>$</Typography>,
-                }}
-                sx={{ mb: 2 }}
-              />
-              <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
-                <Button 
-                  variant="outlined" 
-                  onClick={handleBack}
-                >
-                  Back
-                </Button>
-                <Button 
-                  variant="contained" 
-                  onClick={handleAdditionalFoodSubmit}
-                  disabled={!additionalFoodCost || parseFloat(additionalFoodCost) < 0}
-                >
-                  Continue
-                </Button>
-              </Box>
-            </FormControl>
-          </Box>
-        )}
-
-        {step === 9 && (
-          <Box sx={{ mt: 3 }}>
-            <FormControl fullWidth>
-              <FormLabel>Estimated total scholarships for the semester:</FormLabel>
-              <TextField
-                type="number"
-                value={scholarships}
-                onChange={handleScholarshipChange}
-                placeholder="Enter scholarship amount"
-                InputProps={{
-                  startAdornment: <Typography>$</Typography>,
-                }}
-                sx={{ mb: 2 }}
-              />
-              <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
-                <Button 
-                  variant="outlined" 
-                  onClick={handleBack}
-                >
-                  Back
-                </Button>
-                <Button 
-                  variant="contained" 
-                  onClick={() => setStep(10)}
-                  disabled={scholarships !== '' && parseFloat(scholarships) < 0}
-                >
-                  Finish
-                </Button>
-              </Box>
-            </FormControl>
-          </Box>
-        )}
-
-        {step === 10 && (
-          <Box sx={{ mt: 3 }}>
-            <Typography variant="h5" gutterBottom sx={{ color: 'text.primary' }}>
-              Summary of Selections
-            </Typography>
-            <Paper 
-              sx={{ 
-                p: 3, 
-                mb: 3, 
-                backgroundColor: 'background.paper',
-                borderRadius: 2,
-                boxShadow: 3
-              }}
-            >
-              <List sx={{ width: '100%' }}>
-                {getSummaryItems().map((item, index) => (
-                  <React.Fragment key={item.label}>
-                    <ListItem
-                      sx={{
-                        py: 2,
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center'  // Center items vertically
-                      }}
-                      secondaryAction={
-                        <Button
-                          variant="outlined"
-                          size="small"
-                          onClick={() => setStep(item.step)}
-                          sx={{
-                            color: 'primary.main',
-                            borderColor: 'primary.main',
-                            '&:hover': {
-                              borderColor: 'primary.dark',
-                              backgroundColor: 'primary.dark',
-                              color: 'white'
-                            }
-                          }}
-                        >
-                          Edit
-                        </Button>
-                      }
-                    >
-                      <Box sx={{ flex: 1, pr: 2 }}>
-                        <Typography
-                          variant="subtitle1"
-                          sx={{
-                            fontWeight: 'bold',
-                            color: 'text.primary'
-                          }}
-                        >
-                          {item.label}
-                        </Typography>
-                        <Typography
-                          variant="body1"
-                          sx={{
-                            color: 'text.secondary'
-                          }}
-                        >
-                          {item.value}
-                        </Typography>
-                      </Box>
-                      {item.cost !== undefined && (
-                        <Typography
-                          variant="h6"
-                          sx={{
-                            ml: 2,
-                            color: item.cost < 0 ? 'success.main' : 'text.primary',
-                            fontWeight: 'bold',
-                            minWidth: '120px',
-                            textAlign: 'right',
-                            mr: 8,
-                            display: 'flex',
-                            alignItems: 'center',  // Center text vertically
-                            height: '100%'  // Take full height of container
-                          }}
-                        >
-                          {item.cost < 0 ? '-' : ''}${Math.abs(item.cost).toLocaleString()}
-                        </Typography>
-                      )}
-                    </ListItem>
-                    {index < getSummaryItems().length - 1 && (
-                      <Divider 
-                        sx={{ 
-                          my: 1,
-                          borderColor: 'divider'
-                        }} 
-                      />
-                    )}
-                  </React.Fragment>
-                ))}
-                <Divider sx={{ my: 2, borderColor: 'divider' }} />
-                <ListItem
-                  sx={{
-                    py: 2,
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center'
+          {step === 5 && housingType === 'off-campus' && (
+            <Box sx={{ mt: 3 }}>
+              <FormControl fullWidth>
+                <FormLabel>Estimated monthly rent:</FormLabel>
+                <TextField
+                  type="number"
+                  value={monthlyRent}
+                  onChange={handleMonthlyRentChange}
+                  placeholder="Enter monthly rent"
+                  InputProps={{
+                    startAdornment: <Typography>$</Typography>,
                   }}
+                  sx={{ mb: 2 }}
+                />
+                <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
+                  <Button 
+                    variant="outlined" 
+                    onClick={handleBack}
+                  >
+                    Back
+                  </Button>
+                  <Button 
+                    variant="contained" 
+                    onClick={handleMonthlyRentSubmit}
+                    disabled={!monthlyRent || parseFloat(monthlyRent) < 0}
+                  >
+                    Continue
+                  </Button>
+                </Box>
+              </FormControl>
+            </Box>
+          )}
+
+          {step === 6 && yearOfStudy !== '1' && (
+            <Box sx={{ mt: 3 }}>
+              <FormControl fullWidth>
+                <FormLabel>Will you be purchasing a meal plan?</FormLabel>
+                <RadioGroup
+                  value={wantsMealPlan ? 'yes' : 'no'}
+                  onChange={handleMealPlanChoice}
+                  sx={{ mb: 2 }}
                 >
-                  <Typography
-                    variant="h6"
-                    sx={{
-                      fontWeight: 'bold',
-                      color: 'text.primary'
-                    }}
+                  <FormControlLabel value="yes" control={<Radio />} label="Yes" />
+                  <FormControlLabel value="no" control={<Radio />} label="No" />
+                </RadioGroup>
+                <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
+                  <Button 
+                    variant="outlined" 
+                    onClick={handleBack}
                   >
-                    Estimated Subtotal
-                  </Typography>
-                  <Typography
-                    variant="h5"
-                    sx={{
-                      fontWeight: 'bold',
-                      color: 'primary.main',
-                      mr: 8
-                    }}
+                    Back
+                  </Button>
+                  <Button 
+                    variant="contained" 
+                    onClick={handleMealPlanChoiceSubmit}
+                    disabled={wantsMealPlan === null}
                   >
-                    ${totalCost.toLocaleString()}
+                    Continue
+                  </Button>
+                </Box>
+              </FormControl>
+            </Box>
+          )}
+
+          {step === 7 && (wantsMealPlan || yearOfStudy === '1') && (
+            <Box sx={{ mt: 3 }}>
+              <FormControl fullWidth>
+                <FormLabel>
+                  {yearOfStudy === '1' 
+                    ? "Select your meal plan (First-year students must choose an Unlimited plan):"
+                    : "Select your meal plan:"}
+                </FormLabel>
+                <Select
+                  value={selectedMealPlan}
+                  onChange={handleMealPlanSelection}
+                  displayEmpty
+                  sx={{ mb: 2 }}
+                >
+                  <MenuItem value="" disabled>Select meal plan</MenuItem>
+                  {mealPlans
+                    .filter(plan => yearOfStudy === '1' 
+                      ? plan.type.startsWith('Unlimited') 
+                      : true)
+                    .map((plan) => (
+                      <MenuItem 
+                        key={plan.type} 
+                        value={plan.type}
+                      >
+                        <Box>
+                          <Typography variant="subtitle1">
+                            {plan.type} - ${plan.rate}/semester
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            {plan.description}
+                          </Typography>
+                        </Box>
+                      </MenuItem>
+                    ))}
+                </Select>
+                <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
+                  <Button 
+                    variant="outlined" 
+                    onClick={handleBack}
+                  >
+                    Back
+                  </Button>
+                  <Button 
+                    variant="contained" 
+                    onClick={handleMealPlanSelectionSubmit}
+                    disabled={!selectedMealPlan}
+                  >
+                    Continue
+                  </Button>
+                </Box>
+                {yearOfStudy === '1' && (
+                  <Typography variant="body2" color="error" sx={{ mt: 1 }}>
+                    Note: First-year students are required to purchase an Unlimited meal plan
                   </Typography>
-                </ListItem>
-              </List>
-            </Paper>
-            <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center' }}>
-              <Button
-                variant="contained"
-                color="primary"
-                onClick={() => setStep(11)}
-                size="large"
-                sx={{
-                  px: 4,
-                  py: 1,
-                  fontSize: '1.1rem'
+                )}
+              </FormControl>
+            </Box>
+          )}
+
+          {step === 8 && (
+            <Box sx={{ mt: 3 }}>
+              <FormControl fullWidth>
+                <FormLabel>
+                  {wantsMealPlan 
+                    ? "Estimated monthly spending on food outside of meal plan:"
+                    : "Estimated monthly spending on groceries:"}
+                </FormLabel>
+                <TextField
+                  type="number"
+                  value={additionalFoodCost}
+                  onChange={handleAdditionalFoodCost}
+                  placeholder="Enter monthly food cost"
+                  InputProps={{
+                    startAdornment: <Typography>$</Typography>,
+                  }}
+                  sx={{ mb: 2 }}
+                />
+                <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
+                  <Button 
+                    variant="outlined" 
+                    onClick={handleBack}
+                  >
+                    Back
+                  </Button>
+                  <Button 
+                    variant="contained" 
+                    onClick={handleAdditionalFoodSubmit}
+                    disabled={!additionalFoodCost || parseFloat(additionalFoodCost) < 0}
+                  >
+                    Continue
+                  </Button>
+                </Box>
+              </FormControl>
+            </Box>
+          )}
+
+          {step === 9 && (
+            <Box sx={{ mt: 3 }}>
+              <FormControl fullWidth>
+                <FormLabel>Estimated total scholarships for the semester:</FormLabel>
+                <TextField
+                  type="number"
+                  value={scholarships}
+                  onChange={handleScholarshipChange}
+                  placeholder="Enter scholarship amount"
+                  InputProps={{
+                    startAdornment: <Typography>$</Typography>,
+                  }}
+                  sx={{ mb: 2 }}
+                />
+                <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
+                  <Button 
+                    variant="outlined" 
+                    onClick={handleBack}
+                  >
+                    Back
+                  </Button>
+                  <Button 
+                    variant="contained" 
+                    onClick={() => setStep(10)}
+                    disabled={scholarships !== '' && parseFloat(scholarships) < 0}
+                  >
+                    Finish
+                  </Button>
+                </Box>
+              </FormControl>
+            </Box>
+          )}
+
+          {step === 10 && (
+            <Box sx={{ mt: 3 }}>
+              <Typography variant="h5" gutterBottom sx={{ color: 'text.primary' }}>
+                Summary of Selections
+              </Typography>
+              <Paper 
+                sx={{ 
+                  p: 3, 
+                  mb: 3, 
+                  backgroundColor: 'background.paper',
+                  borderRadius: 2,
+                  boxShadow: 3
                 }}
               >
-                Continue to Final Total
-              </Button>
-            </Box>
-          </Box>
-        )}
-
-        {step === 11 && (
-          <Box sx={{ mt: 3 }}>
-            <Typography variant="h5" gutterBottom sx={{ color: 'text.primary' }}>
-              Final Cost Breakdown
-            </Typography>
-            <Paper 
-              sx={{ 
-                p: 3, 
-                mb: 3, 
-                backgroundColor: 'background.paper',
-                borderRadius: 2,
-                boxShadow: 3
-              }}
-            >
-              <List sx={{ width: '100%' }}>
-                {/* Subtotal */}
-                <ListItem
-                  sx={{
-                    py: 2,
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center'
-                  }}
-                >
-                  <Typography
-                    variant="h6"
-                    sx={{
-                      fontWeight: 'bold',
-                      color: 'text.primary'
-                    }}
-                  >
-                    Subtotal
-                  </Typography>
-                  <Typography
-                    variant="h6"
-                    sx={{
-                      fontWeight: 'bold',
-                      color: 'text.primary',
-                      mr: 2
-                    }}
-                  >
-                    ${totalCost.toLocaleString()}
-                  </Typography>
-                </ListItem>
-
-                <Divider sx={{ my: 2, borderColor: 'divider' }} />
-
-                {/* Fees Section */}
-                <ListItem
-                  sx={{
-                    py: 1,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'flex-start'
-                  }}
-                >
-                  <Typography
-                    variant="h6"
-                    sx={{
-                      fontWeight: 'bold',
-                      color: 'text.primary',
-                      mb: 1
-                    }}
-                  >
-                    Required Fees
-                  </Typography>
-                  <Box sx={{ width: '100%' }}>
-                    {FEES.map((fee, index) => (
-                      <Box
-                        key={fee.name}
+                <List sx={{ width: '100%' }}>
+                  {getSummaryItems().map((item, index) => (
+                    <React.Fragment key={item.label}>
+                      <ListItem
                         sx={{
+                          py: 2,
                           display: 'flex',
                           justifyContent: 'space-between',
-                          alignItems: 'center',
-                          py: 1
+                          alignItems: 'center'  // Center items vertically
                         }}
+                        secondaryAction={
+                          <Button
+                            variant="outlined"
+                            size="small"
+                            onClick={() => setStep(item.step)}
+                            sx={{
+                              color: 'primary.main',
+                              borderColor: 'primary.main',
+                              '&:hover': {
+                                borderColor: 'primary.dark',
+                                backgroundColor: 'primary.dark',
+                                color: 'white'
+                              }
+                            }}
+                          >
+                            Edit
+                          </Button>
+                        }
                       >
-                        <Typography
-                          variant="body1"
-                          sx={{ color: 'text.secondary' }}
-                        >
-                          {fee.name}
-                        </Typography>
-                        <Typography
-                          variant="body1"
-                          sx={{
-                            color: 'text.primary',
-                            mr: 2
-                          }}
-                        >
-                          ${fee.amount.toFixed(2)}
-                        </Typography>
-                      </Box>
-                    ))}
-                  </Box>
-                </ListItem>
-
-                <Divider 
-                  sx={{ 
-                    my: 2, 
-                    borderColor: 'divider',
-                    borderWidth: 2 
-                  }} 
-                />
-
-                {/* Grand Total */}
-                <ListItem
-                  sx={{
-                    py: 2,
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    backgroundColor: 'primary.main',
-                    borderRadius: 1,
-                    mt: 2
-                  }}
-                >
-                  <Typography
-                    variant="h5"
+                        <Box sx={{ flex: 1, pr: 2 }}>
+                          <Typography
+                            variant="subtitle1"
+                            sx={{
+                              fontWeight: 'bold',
+                              color: 'text.primary'
+                            }}
+                          >
+                            {item.label}
+                          </Typography>
+                          <Typography
+                            variant="body1"
+                            sx={{
+                              color: 'text.secondary'
+                            }}
+                          >
+                            {item.value}
+                          </Typography>
+                        </Box>
+                        {item.cost !== undefined && (
+                          <Typography
+                            variant="h6"
+                            sx={{
+                              ml: 2,
+                              color: item.cost < 0 ? 'success.main' : 'text.primary',
+                              fontWeight: 'bold',
+                              minWidth: '120px',
+                              textAlign: 'right',
+                              mr: 8,
+                              display: 'flex',
+                              alignItems: 'center',  // Center text vertically
+                              height: '100%'  // Take full height of container
+                            }}
+                          >
+                            {item.cost < 0 ? '-' : ''}${Math.abs(item.cost).toLocaleString()}
+                          </Typography>
+                        )}
+                      </ListItem>
+                      {index < getSummaryItems().length - 1 && (
+                        <Divider 
+                          sx={{ 
+                            my: 1,
+                            borderColor: 'divider'
+                          }} 
+                        />
+                      )}
+                    </React.Fragment>
+                  ))}
+                  <Divider sx={{ my: 2, borderColor: 'divider' }} />
+                  <ListItem
                     sx={{
-                      fontWeight: 'bold',
-                      color: 'white'
+                      py: 2,
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center'
                     }}
                   >
-                    GRAND TOTAL
-                  </Typography>
-                  <Typography
-                    variant="h5"
-                    sx={{
-                      fontWeight: 'bold',
-                      color: 'white',
-                      mr: 2
-                    }}
-                  >
-                    ${calculateTotalWithFees().toLocaleString()}
-                  </Typography>
-                </ListItem>
-              </List>
-            </Paper>
-            <Box sx={{ display: 'flex', gap: 2, justifyContent: 'space-between' }}>
-              <Button
-                variant="outlined"
-                onClick={() => setStep(10)}
-                size="large"
-                sx={{
-                  px: 4,
-                  py: 1,
-                  fontSize: '1.1rem'
-                }}
-              >
-                Back to Summary
-              </Button>
-              <Box sx={{ display: 'flex', gap: 2 }}>
-                <Button
-                  variant="contained"
-                  color="secondary"
-                  onClick={handleCreateDebtAccount}
-                  size="large"
-                  sx={{
-                    px: 4,
-                    py: 1,
-                    fontSize: '1.1rem'
-                  }}
-                >
-                  Create Bill Account
-                </Button>
+                    <Typography
+                      variant="h6"
+                      sx={{
+                        fontWeight: 'bold',
+                        color: 'text.primary'
+                      }}
+                    >
+                      Estimated Subtotal
+                    </Typography>
+                    <Typography
+                      variant="h5"
+                      sx={{
+                        fontWeight: 'bold',
+                        color: 'primary.main',
+                        mr: 8
+                      }}
+                    >
+                      ${totalCost.toLocaleString()}
+                    </Typography>
+                  </ListItem>
+                </List>
+              </Paper>
+              <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center' }}>
                 <Button
                   variant="contained"
                   color="primary"
-                  onClick={() => setStep(1)}
+                  onClick={() => setStep(11)}
                   size="large"
                   sx={{
                     px: 4,
@@ -1117,14 +955,198 @@ const CostCalculator: React.FC = () => {
                     fontSize: '1.1rem'
                   }}
                 >
-                  Start Over
+                  Continue to Final Total
                 </Button>
               </Box>
             </Box>
-          </Box>
-        )}
-      </Box>
-    </Container>
+          )}
+
+          {step === 11 && (
+            <Box sx={{ mt: 3 }}>
+              <Typography variant="h5" gutterBottom sx={{ color: 'text.primary' }}>
+                Final Cost Breakdown
+              </Typography>
+              <Paper 
+                sx={{ 
+                  p: 3, 
+                  mb: 3, 
+                  backgroundColor: 'background.paper',
+                  borderRadius: 2,
+                  boxShadow: 3
+                }}
+              >
+                <List sx={{ width: '100%' }}>
+                  {/* Subtotal */}
+                  <ListItem
+                    sx={{
+                      py: 2,
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center'
+                    }}
+                  >
+                    <Typography
+                      variant="h6"
+                      sx={{
+                        fontWeight: 'bold',
+                        color: 'text.primary'
+                      }}
+                    >
+                      Subtotal
+                    </Typography>
+                    <Typography
+                      variant="h6"
+                      sx={{
+                        fontWeight: 'bold',
+                        color: 'text.primary',
+                        mr: 2
+                      }}
+                    >
+                      ${totalCost.toLocaleString()}
+                    </Typography>
+                  </ListItem>
+
+                  <Divider sx={{ my: 2, borderColor: 'divider' }} />
+
+                  {/* Fees Section */}
+                  <ListItem
+                    sx={{
+                      py: 1,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'flex-start'
+                    }}
+                  >
+                    <Typography
+                      variant="h6"
+                      sx={{
+                        fontWeight: 'bold',
+                        color: 'text.primary',
+                        mb: 1
+                      }}
+                    >
+                      Required Fees
+                    </Typography>
+                    <Box sx={{ width: '100%' }}>
+                      {FEES.map((fee, index) => (
+                        <Box
+                          key={fee.name}
+                          sx={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            py: 1
+                          }}
+                        >
+                          <Typography
+                            variant="body1"
+                            sx={{ color: 'text.secondary' }}
+                          >
+                            {fee.name}
+                          </Typography>
+                          <Typography
+                            variant="body1"
+                            sx={{
+                              color: 'text.primary',
+                              mr: 2
+                            }}
+                          >
+                            ${fee.amount.toFixed(2)}
+                          </Typography>
+                        </Box>
+                      ))}
+                    </Box>
+                  </ListItem>
+
+                  <Divider 
+                    sx={{ 
+                      my: 2, 
+                      borderColor: 'divider',
+                      borderWidth: 2 
+                    }} 
+                  />
+
+                  {/* Grand Total */}
+                  <ListItem
+                    sx={{
+                      py: 2,
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      backgroundColor: 'primary.main',
+                      borderRadius: 1,
+                      mt: 2
+                    }}
+                  >
+                    <Typography
+                      variant="h5"
+                      sx={{
+                        fontWeight: 'bold',
+                        color: 'white'
+                      }}
+                    >
+                      GRAND TOTAL
+                    </Typography>
+                    <Typography
+                      variant="h5"
+                      sx={{
+                        fontWeight: 'bold',
+                        color: 'white',
+                        mr: 2
+                      }}
+                    >
+                      ${calculateTotalWithFees().toLocaleString()}
+                    </Typography>
+                  </ListItem>
+                </List>
+              </Paper>
+              <Box sx={{ display: 'flex', gap: 2, justifyContent: 'space-between' }}>
+                <Button
+                  variant="outlined"
+                  onClick={() => setStep(10)}
+                  size="large"
+                  sx={{
+                    px: 4,
+                    py: 1,
+                    fontSize: '1.1rem'
+                  }}
+                >
+                  Back to Summary
+                </Button>
+                <Box sx={{ display: 'flex', gap: 2 }}>
+                  <Button
+                    variant="contained"
+                    color="secondary"
+                    onClick={handleCreateDebtAccount}
+                    size="large"
+                    sx={{
+                      px: 4,
+                      py: 1,
+                      fontSize: '1.1rem'
+                    }}
+                  >
+                    Create Bill Account
+                  </Button>
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    onClick={() => setStep(1)}
+                    size="large"
+                    sx={{
+                      px: 4,
+                      py: 1,
+                      fontSize: '1.1rem'
+                    }}
+                  >
+                    Start Over
+                  </Button>
+                </Box>
+              </Box>
+            </Box>
+          )}
+        </Box>
+      </Container>
+    </Box>
   );
 };
 
