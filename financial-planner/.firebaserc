@@ -1,5 +1,15 @@
 {
   "projects": {
     "default": "farhan-financial-planner"
-  }
+  },
+  "targets": {
+    "farhan-financial-planner": {
+      "hosting": {
+        "farhan-financial-planner": [
+          "farhan-financial-planner"
+        ]
+      }
+    }
+  },
+  "etags": {}
 }
