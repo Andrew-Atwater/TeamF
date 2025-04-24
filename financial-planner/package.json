@@ -53,26 +53,17 @@
     "dev": "concurrently \"npm run start:react\" \"npm run start:backend\""
   },
   "jest": {
-    "testEnvironment": "node",
-    "testMatch": [
-      "**/src/__tests__/**/*.test.tsx",
-      "**/src/__tests__/**/*.test.ts"
-    ],
+    "testEnvironment": "jsdom",
+    "moduleNameMapper": {
+      "\\.(css|less|scss|sass)$": "identity-obj-proxy",
+      "^recharts$": "<rootDir>/src/__mocks__/recharts.ts"
+    },
     "transform": {
       "^.+\\.(ts|tsx)$": "ts-jest"
     },
-    "moduleNameMapper": {
-      "\\.(css|less|scss|sass)$": "identity-obj-proxy"
-    },
     "setupFilesAfterEnv": [
       "<rootDir>/src/setupTests.ts"
-    ],
-    "collectCoverage": true,
-    "coverageReporters": [
-      "text",
-      "lcov"
-    ],
-    "coverageDirectory": "coverage"
+    ]
   },
   "eslintConfig": {
     "extends": [
