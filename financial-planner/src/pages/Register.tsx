@@ -1,3 +1,4 @@
+import React, { useState } from "react";
 import {
   Avatar,
   Box,
@@ -11,7 +12,6 @@ import {
   Alert
 } from "@mui/material";
 import { LockOutlined } from "@mui/icons-material";
-import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 import {auth} from "../firebase-config";
@@ -28,8 +28,8 @@ const Register = () => {
   const [openErrorSnackbar, setOpenErrorSnackbar] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
-  const [signInWithGoogle, googleUser, googleLoading, googleError] = useSignInWithGoogle(auth);
-  const [createUserWithEmailAndPassword, emailUser, emailLoading, emailError] = useCreateUserWithEmailAndPassword(auth);
+  const [signInWithGoogle, , googleLoading, googleError] = useSignInWithGoogle(auth);
+  const [createUserWithEmailAndPassword, , emailLoading, emailError] = useCreateUserWithEmailAndPassword(auth);
 
   const handleErrorClose = () => {
     setOpenErrorSnackbar(false);
@@ -48,7 +48,7 @@ const Register = () => {
       
       if (userCredential && userCredential.user) {
         // Add user to Firestore
-        const userDocRef = await addDoc(collection(db, "user"), {
+        await addDoc(collection(db, "user"), {
           uid: userCredential.user.uid,
           name: name,
           email: email,
@@ -70,7 +70,7 @@ const Register = () => {
       const result = await signInWithGoogle();
       
       if (result && result.user) {
-        const userDocRef = await addDoc(collection(db, "user"), {
+        await addDoc(collection(db, "user"), {
           uid: result.user.uid,
           name: result.user.displayName || name,
           email: result.user.email,
@@ -86,6 +86,18 @@ const Register = () => {
       setOpenErrorSnackbar(true);
     }
   };
+
+  // Show error messages from Firebase hooks
+  React.useEffect(() => {
+    if (googleError) {
+      setErrorMessage(googleError.message);
+      setOpenErrorSnackbar(true);
+    }
+    if (emailError) {
+      setErrorMessage(emailError.message);
+      setOpenErrorSnackbar(true);
+    }
+  }, [googleError, emailError]);
 
   return (
     <>

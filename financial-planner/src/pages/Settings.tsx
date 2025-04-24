@@ -19,7 +19,8 @@ import {
   Snackbar,
   AppBar,
   Toolbar,
-  IconButton
+  IconButton,
+  TextField
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { useSettings } from '../context/SettingsContext';
@@ -244,6 +245,34 @@ const Settings: React.FC = () => {
                   </FormControl>
                 </Grid>
               </Grid>
+            </Paper>
+
+            <Paper sx={{ p: 3, mb: 3 }}>
+              <Typography variant="h6" gutterBottom>
+                Profile
+              </Typography>
+              <form onSubmit={handleSubmit}>
+                <Grid container spacing={3}>
+                  <Grid item xs={12}>
+                    <TextField
+                      fullWidth
+                      label="Display Name"
+                      value={displayName}
+                      onChange={(e) => setDisplayName(e.target.value)}
+                      variant="outlined"
+                    />
+                  </Grid>
+                  <Grid item xs={12}>
+                    <Button
+                      type="submit"
+                      variant="contained"
+                      color="primary"
+                    >
+                      Update Profile
+                    </Button>
+                  </Grid>
+                </Grid>
+              </form>
             </Paper>
 
             <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end' }}>

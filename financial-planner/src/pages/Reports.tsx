@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   Container, 
   Typography, 
@@ -77,11 +77,47 @@ const Reports: React.FC = () => {
     return () => unsubscribe();
   }, []);
 
+  const generateChartData = useCallback(() => {
+    if (!selectedAccount) return;
+
+    // Filter transactions for selected account
+    const accountTransactions = transactions
+      .filter(t => t.accountId === selectedAccount.id)
+      .sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
+
+    // Create chart data points
+    const data: ChartData[] = [];
+    let currentBalance = 0;
+
+    // Add initial balance if it's a create transaction
+    const createTransaction = accountTransactions.find(t => t.type === 'create');
+    if (createTransaction) {
+      currentBalance = createTransaction.newBalance || 0;
+      data.push({
+        date: createTransaction.timestamp.toLocaleDateString(),
+        balance: currentBalance
+      });
+    }
+
+    // Add subsequent balance changes
+    accountTransactions.forEach(transaction => {
+      if (transaction.type === 'update') {
+        currentBalance = transaction.newBalance || currentBalance;
+        data.push({
+          date: transaction.timestamp.toLocaleDateString(),
+          balance: currentBalance
+        });
+      }
+    });
+
+    setChartData(data);
+  }, [selectedAccount, transactions]);
+
   useEffect(() => {
     if (selectedAccount && transactions.length > 0) {
       generateChartData();
     }
-  }, [selectedAccount, transactions]);
+  }, [selectedAccount, transactions, generateChartData]);
 
   const fetchAccounts = async (uid: string) => {
     try {
@@ -123,42 +159,6 @@ const Reports: React.FC = () => {
     } catch (error) {
       console.error('Error fetching transactions:', error);
     }
-  };
-
-  const generateChartData = () => {
-    if (!selectedAccount) return;
-
-    // Filter transactions for selected account
-    const accountTransactions = transactions
-      .filter(t => t.accountId === selectedAccount.id)
-      .sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
-
-    // Create chart data points
-    const data: ChartData[] = [];
-    let currentBalance = 0;
-
-    // Add initial balance if it's a create transaction
-    const createTransaction = accountTransactions.find(t => t.type === 'create');
-    if (createTransaction) {
-      currentBalance = createTransaction.newBalance || 0;
-      data.push({
-        date: createTransaction.timestamp.toLocaleDateString(),
-        balance: currentBalance
-      });
-    }
-
-    // Add subsequent balance changes
-    accountTransactions.forEach(transaction => {
-      if (transaction.type === 'update') {
-        currentBalance = transaction.newBalance || currentBalance;
-        data.push({
-          date: transaction.timestamp.toLocaleDateString(),
-          balance: currentBalance
-        });
-      }
-    });
-
-    setChartData(data);
   };
 
   const handleAccountClick = (account: Account) => {
