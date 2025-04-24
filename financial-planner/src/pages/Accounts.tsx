@@ -11,9 +11,13 @@ import {
   DialogActions,
   Button,
   TextField,
-  CircularProgress
+  CircularProgress,
+  AppBar,
+  Toolbar,
+  IconButton
 } from '@mui/material';
-import { Edit as EditIcon } from '@mui/icons-material';
+import { Edit as EditIcon, ArrowBack as ArrowBackIcon } from '@mui/icons-material';
+import { useNavigate } from 'react-router-dom';
 import { auth, db } from '../firebase-config';
 import { collection, query, where, getDocs, doc, updateDoc, deleteDoc } from 'firebase/firestore';
 
@@ -33,6 +37,7 @@ interface Account {
 }
 
 const Accounts: React.FC = () => {
+  const navigate = useNavigate();
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState<boolean>(false);
@@ -117,112 +122,130 @@ const Accounts: React.FC = () => {
   };
 
   return (
-    <Container>
-      <Box sx={{ mt: 4 }}>
-        <Typography variant="h4" component="h1" gutterBottom>
-          Accounts
-        </Typography>
-        
-        {isLoading ? (
-          <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
-            <CircularProgress />
-          </Box>
-        ) : accounts.length === 0 ? (
-          <Typography variant="body1" color="text.secondary">
-            No accounts found.
+    <Box sx={{ flexGrow: 1 }}>
+      <AppBar position="static">
+        <Toolbar>
+          <IconButton
+            edge="start"
+            color="inherit"
+            onClick={() => navigate('/')}
+            sx={{ mr: 2 }}
+          >
+            <ArrowBackIcon />
+          </IconButton>
+          <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+            Accounts
           </Typography>
-        ) : (
-          <Box sx={{ display: 'grid', gap: 2, mt: 2 }}>
-            {accounts.map((account) => (
-              <Card key={account.id}>
-                <CardContent>
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <Typography variant="h6">{account.name}</Typography>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <Typography 
-                        variant="h5" 
-                        color={account.balance < 0 ? 'error.main' : 'success.main'}
-                      >
-                        ${Math.abs(account.balance).toFixed(2)}
-                      </Typography>
-                      <Button
-                        startIcon={<EditIcon />}
-                        onClick={() => handleEditClick(account)}
-                      >
-                        Edit
-                      </Button>
-                    </Box>
-                  </Box>
-                  {account.description && (
-                    <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                      {account.description}
-                    </Typography>
-                  )}
-                  {account.dueDate && (
-                    <Box sx={{ mt: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <Typography variant="body2" color="text.secondary">
-                        Due Date
-                      </Typography>
-                      <Typography variant="body1" color="error.main">
-                        {new Date(account.dueDate + 'T00:00:00').toLocaleDateString()}
-                      </Typography>
-                    </Box>
-                  )}
-                </CardContent>
-              </Card>
-            ))}
-          </Box>
-        )}
+        </Toolbar>
+      </AppBar>
 
-        {/* Edit Account Dialog */}
-        <Dialog open={isEditDialogOpen} onClose={() => setIsEditDialogOpen(false)} maxWidth="sm" fullWidth>
-          <DialogTitle>Edit Account Balance</DialogTitle>
-          <DialogContent>
-            {selectedAccount && (
-              <>
-                <TextField
-                  margin="dense"
-                  name="balance"
-                  label="Balance"
-                  type="number"
-                  fullWidth
-                  variant="outlined"
-                  value={selectedAccount.balance}
-                  onChange={handleEditInputChange}
-                  sx={{ mb: 2 }}
-                />
-                {selectedAccount.type === 'debt' && (
+      <Container>
+        <Box sx={{ mt: 4 }}>
+          <Typography variant="h4" component="h1" gutterBottom>
+            Accounts
+          </Typography>
+          
+          {isLoading ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+              <CircularProgress />
+            </Box>
+          ) : accounts.length === 0 ? (
+            <Typography variant="body1" color="text.secondary">
+              No accounts found.
+            </Typography>
+          ) : (
+            <Box sx={{ display: 'grid', gap: 2, mt: 2 }}>
+              {accounts.map((account) => (
+                <Card key={account.id}>
+                  <CardContent>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <Typography variant="h6">{account.name}</Typography>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Typography 
+                          variant="h5" 
+                          color={account.balance < 0 ? 'error.main' : 'success.main'}
+                        >
+                          ${Math.abs(account.balance).toFixed(2)}
+                        </Typography>
+                        <Button
+                          startIcon={<EditIcon />}
+                          onClick={() => handleEditClick(account)}
+                        >
+                          Edit
+                        </Button>
+                      </Box>
+                    </Box>
+                    {account.description && (
+                      <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                        {account.description}
+                      </Typography>
+                    )}
+                    {account.dueDate && (
+                      <Box sx={{ mt: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <Typography variant="body2" color="text.secondary">
+                          Due Date
+                        </Typography>
+                        <Typography variant="body1" color="error.main">
+                          {new Date(account.dueDate + 'T00:00:00').toLocaleDateString()}
+                        </Typography>
+                      </Box>
+                    )}
+                  </CardContent>
+                </Card>
+              ))}
+            </Box>
+          )}
+
+          {/* Edit Account Dialog */}
+          <Dialog open={isEditDialogOpen} onClose={() => setIsEditDialogOpen(false)} maxWidth="sm" fullWidth>
+            <DialogTitle>Edit Account Balance</DialogTitle>
+            <DialogContent>
+              {selectedAccount && (
+                <>
                   <TextField
                     margin="dense"
-                    name="dueDate"
-                    label="Due Date"
-                    type="date"
+                    name="balance"
+                    label="Balance"
+                    type="number"
                     fullWidth
                     variant="outlined"
-                    value={selectedAccount.dueDate || ''}
+                    value={selectedAccount.balance}
                     onChange={handleEditInputChange}
-                    InputLabelProps={{
-                      shrink: true,
-                    }}
                     sx={{ mb: 2 }}
                   />
-                )}
-              </>
-            )}
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setIsEditDialogOpen(false)}>Cancel</Button>
-            <Button 
-              onClick={handleUpdateAccount}
-              variant="contained"
-              color="primary"
-            >
-              Save
-            </Button>
-          </DialogActions>
-        </Dialog>
-      </Box>
-    </Container>
+                  {selectedAccount.type === 'debt' && (
+                    <TextField
+                      margin="dense"
+                      name="dueDate"
+                      label="Due Date"
+                      type="date"
+                      fullWidth
+                      variant="outlined"
+                      value={selectedAccount.dueDate || ''}
+                      onChange={handleEditInputChange}
+                      InputLabelProps={{
+                        shrink: true,
+                      }}
+                      sx={{ mb: 2 }}
+                    />
+                  )}
+                </>
+              )}
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={() => setIsEditDialogOpen(false)}>Cancel</Button>
+              <Button 
+                onClick={handleUpdateAccount}
+                variant="contained"
+                color="primary"
+              >
+                Save
+              </Button>
+            </DialogActions>
+          </Dialog>
+        </Box>
+      </Container>
+    </Box>
   );
 };
 
