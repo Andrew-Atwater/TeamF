@@ -9,6 +9,8 @@ import Settings from "./pages/Settings";
 import TransactionHistory from './pages/TransactionHistory';
 import AddTransaction from './pages/AddTransaction';
 import CostCalculator from './pages/CostCalculator';
+import Reports from './pages/Reports';
+import Accounts from './pages/Accounts';
 
 const App: React.FC = () => {
   const [user, loading] = useAuthState(auth);
@@ -26,6 +28,8 @@ const App: React.FC = () => {
       <Route path="/transactions" element={user ? <TransactionHistory /> : <Navigate to="/login" replace />} />
       <Route path="/add-transaction" element={user ? <AddTransaction /> : <Navigate to="/login" replace />} />
       <Route path="/cost-calculator" element={<CostCalculator />} />
+      <Route path="/reports" element={user ? <Reports /> : <Navigate to="/login" replace />} />
+      <Route path="/accounts" element={user ? <Accounts /> : <Navigate to="/login" replace />} />
     </Routes>
   );
 };
