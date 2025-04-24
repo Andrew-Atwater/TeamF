@@ -24,16 +24,13 @@
     "@testing-library/user-event": "^13.5.0",
     "@types/jest": "^27.5.2",
     "@types/node": "^16.18.126",
-    "@types/react": "^18.2.55",
     "@types/react-datepicker": "^4.19.6",
-    "@types/react-dom": "^18.2.19",
     "date-fns": "^4.1.0",
     "firebase": "^11.6.0",
     "react": "^18.2.0",
     "react-datepicker": "^4.25.0",
     "react-dom": "^18.2.0",
     "react-firebase-hooks": "^5.1.1",
-    "react-router-dom": "^7.2.0",
     "react-scripts": "^5.0.1",
     "recharts": "^2.15.3",
     "ts-node": "^10.9.1",
@@ -63,6 +60,10 @@
     },
     "setupFilesAfterEnv": [
       "<rootDir>/src/setupTests.ts"
+    ],
+    "moduleDirectories": [
+      "node_modules",
+      "src"
     ]
   },
   "eslintConfig": {
@@ -84,9 +85,13 @@
     ]
   },
   "devDependencies": {
+    "@types/react": "^19.1.2",
+    "@types/react-dom": "^19.1.2",
+    "@types/react-router-dom": "^5.3.3",
     "concurrently": "^8.2.2",
     "jest": "^27.5.1",
-    "jest-junit": "^16.0.0"
+    "jest-junit": "^16.0.0",
+    "react-router-dom": "^6.22.3"
   },
   "description": "This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).",
   "main": "index.js",
