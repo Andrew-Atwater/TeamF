@@ -11,4 +11,4 @@ global.TextEncoder = TextEncoder;
 global.TextDecoder = TextDecoder
 globalThis.ReadableStream = ReadableStream;
 
-globalThis.setImmediate = global.setImmediate || ((fn:any) => setTimeout(fn, 0))
+globalThis.setImmediate = global.setImmediate || ((fn:any) => setTimeout(fn, 0));
