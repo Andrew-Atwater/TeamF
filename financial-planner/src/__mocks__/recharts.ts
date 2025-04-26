@@ -1,13 +1,14 @@
-import React from 'react';
-
-const MockComponent = () => <div>Mock Component</div>;
+const MockComponent = () => {
+    return { type: 'div', props: { children: 'Mock Component' } };
+};
 
 module.exports = {
-  LineChart: MockComponent,
-  Line: MockComponent,
-  XAxis: MockComponent,
-  YAxis: MockComponent,
-  CartesianGrid: MockComponent,
-  Tooltip: MockComponent,
-  Legend: MockComponent,
+    LineChart: MockComponent,
+    Line: MockComponent,
+    XAxis: MockComponent,
+    YAxis: MockComponent,
+    CartesianGrid: MockComponent,
+    Tooltip: MockComponent,
+    Legend: MockComponent,
+    ResponsiveContainer: MockComponent
 };
