@@ -28,6 +28,47 @@ const themePalettes: Record<string, PaletteOptions> = {
       dark: '#7b1fa2',
     },
   },
+  modern: {
+    primary: {
+      main: '#2C3E50',
+      light: '#34495E',
+      dark: '#1A252F',
+    },
+    secondary: {
+      main: '#3498DB',
+      light: '#5DADE2',
+      dark: '#2874A6',
+    },
+    error: {
+      main: '#E74C3C',
+      light: '#EC7063',
+      dark: '#CB4335',
+    },
+    warning: {
+      main: '#F39C12',
+      light: '#F5B041',
+      dark: '#D68910',
+    },
+    success: {
+      main: '#27AE60',
+      light: '#2ECC71',
+      dark: '#229954',
+    },
+    info: {
+      main: '#3498DB',
+      light: '#5DADE2',
+      dark: '#2874A6',
+    },
+    background: {
+      default: '#F8F9FA',
+      paper: '#FFFFFF',
+    },
+    text: {
+      primary: '#2C3E50',
+      secondary: '#7F8C8D',
+    },
+    divider: '#ECF0F1',
+  },
   ocean: {
     primary: {
       main: '#006064',
@@ -128,22 +169,19 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           const userDoc = await getDoc(doc(db, 'userSettings', user.uid));
           
           if (userDoc.exists()) {
-            // Merge with default settings to ensure all fields exist
             setSettings({ ...defaultSettings, ...userDoc.data() as UserSettings });
           } else {
-            // For new users, create settings document with defaults
             await setDoc(doc(db, 'userSettings', user.uid), defaultSettings);
             setSettings(defaultSettings);
           }
         } catch (error) {
           console.error('Error fetching settings:', error);
           setError('Failed to load settings. Please try again later.');
-          setSettings(defaultSettings); // Fallback to defaults on error
+          setSettings(defaultSettings);
         } finally {
           setIsLoading(false);
         }
       } else {
-        // Reset to defaults when user logs out
         setSettings(defaultSettings);
         setIsLoading(false);
         setError(null);
@@ -163,15 +201,12 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       setError(null);
       const newSettings = { ...settings, [key]: value };
       
-      // Update Firestore first
       await setDoc(doc(db, 'userSettings', auth.currentUser.uid), newSettings);
       
-      // Only update local state if Firestore update succeeds
       setSettings(newSettings);
     } catch (error) {
       console.error('Error saving settings:', error);
       setError('Failed to save settings. Please try again.');
-      // Revert the settings change
       setSettings(settings);
     }
   };
