@@ -32,6 +32,7 @@ const App: React.FC = () => {
       <Route path="/reports" element={user ? <Reports /> : <Navigate to="/login" replace />} />
       <Route path="/accounts" element={user ? <Accounts /> : <Navigate to="/login" replace />} />
       <Route path="/calendar" element={user ? <Calendar /> : <Navigate to="/login" replace />} />
+
     </Routes>
   );
 };
