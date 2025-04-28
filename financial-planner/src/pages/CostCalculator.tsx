@@ -428,38 +428,7 @@ const CostCalculator: React.FC = () => {
       </AppBar>
 
       <Container maxWidth="sm">
-        <Box sx={{ mt: 4, mb: 4, position: 'relative' }}>
-          <Paper 
-            elevation={3} 
-            sx={{ 
-              position: 'fixed', 
-              top: 20, 
-              right: 20, 
-              padding: 2,
-              zIndex: 1000,
-              backgroundColor: 'primary.main',
-              color: 'white'
-            }}
-          >
-            <Typography variant="h6">
-              Estimated Semester Cost:
-            </Typography>
-            <Typography variant="h4">
-              ${totalCost.toLocaleString()}
-            </Typography>
-            {residencyStatus && creditHours && (
-              <Typography variant="body2" sx={{ mt: 1 }}>
-                Tuition ({creditHours} credit hours @ ${residencyStatus === 'in-state' ? '388' : '1,108'}/credit):
-                ${(parseFloat(creditHours) * (residencyStatus === 'in-state' ? 388 : 1108)).toLocaleString()}
-              </Typography>
-            )}
-            {scholarships && parseFloat(scholarships) > 0 && (
-              <Typography variant="body2" color="success.light">
-                Scholarships: -${parseFloat(scholarships).toLocaleString()}
-              </Typography>
-            )}
-          </Paper>
-
+        <Box sx={{ mt: 4, mb: 4 }}>
           <Typography variant="h4" component="h1" gutterBottom>
             Cost Calculator
           </Typography>
@@ -481,11 +450,12 @@ const CostCalculator: React.FC = () => {
                   <MenuItem value="4">Fourth Year</MenuItem>
                   <MenuItem value="4+">Fourth Year+</MenuItem>
                 </Select>
-                <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
+                <Box sx={{ display: 'flex', justifyContent: 'center', mb: 3 }}>
                   <Button 
                     variant="contained" 
                     onClick={handleYearSubmit}
                     disabled={!yearOfStudy}
+                    sx={{ width: '100%' }}
                   >
                     Continue
                   </Button>
@@ -506,17 +476,12 @@ const CostCalculator: React.FC = () => {
                   <FormControlLabel value="in-state" control={<Radio />} label="In-State Resident" />
                   <FormControlLabel value="out-of-state" control={<Radio />} label="Out-of-State Student" />
                 </RadioGroup>
-                <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
-                  <Button 
-                    variant="outlined" 
-                    onClick={handleBack}
-                  >
-                    Back
-                  </Button>
+                <Box sx={{ display: 'flex', justifyContent: 'center', mb: 3 }}>
                   <Button 
                     variant="contained" 
                     onClick={handleResidencySubmit}
                     disabled={!residencyStatus}
+                    sx={{ width: '100%' }}
                   >
                     Continue
                   </Button>
@@ -542,17 +507,12 @@ const CostCalculator: React.FC = () => {
                   helperText={`Tuition rate: $${residencyStatus === 'in-state' ? '388' : '1,108'} per credit hour`}
                   sx={{ mb: 2 }}
                 />
-                <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
-                  <Button 
-                    variant="outlined" 
-                    onClick={handleBack}
-                  >
-                    Back
-                  </Button>
+                <Box sx={{ display: 'flex', justifyContent: 'center', mb: 3 }}>
                   <Button 
                     variant="contained" 
                     onClick={handleCreditHoursSubmit}
                     disabled={!creditHours || parseFloat(creditHours) < 0 || parseFloat(creditHours) > 24}
+                    sx={{ width: '100%' }}
                   >
                     Continue
                   </Button>
@@ -560,6 +520,35 @@ const CostCalculator: React.FC = () => {
               </FormControl>
             </Box>
           )}
+
+          {/* Add the cost comparison block after the continue button */}
+          <Paper 
+            elevation={3} 
+            sx={{ 
+              padding: 2,
+              backgroundColor: 'primary.main',
+              color: 'white',
+              width: '100%'
+            }}
+          >
+            <Typography variant="h6">
+              Estimated Semester Cost:
+            </Typography>
+            <Typography variant="h4">
+              ${totalCost.toLocaleString()}
+            </Typography>
+            {residencyStatus && creditHours && (
+              <Typography variant="body2" sx={{ mt: 1 }}>
+                Tuition ({creditHours} credit hours @ ${residencyStatus === 'in-state' ? '388' : '1,108'}/credit):
+                ${(parseFloat(creditHours) * (residencyStatus === 'in-state' ? 388 : 1108)).toLocaleString()}
+              </Typography>
+            )}
+            {scholarships && parseFloat(scholarships) > 0 && (
+              <Typography variant="body2" color="success.light">
+                Scholarships: -${parseFloat(scholarships).toLocaleString()}
+              </Typography>
+            )}
+          </Paper>
 
           {step === 4 && yearOfStudy !== '1' && (
             <Box sx={{ mt: 3 }}>

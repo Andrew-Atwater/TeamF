@@ -1,6 +1,6 @@
 {
   "name": "financial-planner",
-  "version": "0.1.0",
+  "version": "0.7.0",
   "private": true,
   "testResultsProcessor": "jest-junit",
   "jest-junit": {
@@ -23,6 +23,7 @@
     "@testing-library/react": "^16.2.0",
     "@testing-library/user-event": "^13.5.0",
     "@types/jest": "^27.5.2",
+    "@types/react": "^18.2.55",
     "@types/node": "^16.18.126",
     "@types/react-datepicker": "^4.19.6",
     "date-fns": "^4.1.0",
@@ -33,24 +34,22 @@
     "react-firebase-hooks": "^5.1.1",
     "react-scripts": "^5.0.1",
     "recharts": "^2.15.3",
-    "ts-node": "^10.9.1",
     "typescript": "^4.9.5",
-    "util": "^0.12.5",
     "web-streams-polyfill": "^4.1.0",
     "web-vitals": "^2.1.4"
   },
   "scripts": {
-    "start": "concurrently \"npm run start:react\" \"npm run start:backend\"",
-    "start:react": "react-scripts start",
-    "start:backend": "cd backend && npm start",
+    "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "jest --verbose",
-    "eject": "react-scripts eject",
-    "install:all": "npm install && cd backend && npm install",
-    "dev": "concurrently \"npm run start:react\" \"npm run start:backend\""
+    "eject": "react-scripts eject"
   },
   "jest": {
     "testEnvironment": "jsdom",
+    "testMatch": [
+      "**/src/__tests__/**/*.test.tsx",
+      "**/src/__tests__/**/*.test.ts"
+    ],
     "moduleNameMapper": {
       "\\.(css|less|scss|sass)$": "identity-obj-proxy",
       "^recharts$": "<rootDir>/src/__mocks__/recharts.ts"
@@ -85,10 +84,12 @@
     ]
   },
   "devDependencies": {
+
     "@types/react": "^19.1.2",
     "@types/react-dom": "^19.1.2",
     "@types/react-router-dom": "^5.3.3",
     "concurrently": "^8.2.2",
+
     "jest": "^27.5.1",
     "jest-junit": "^16.0.0",
     "react-router-dom": "^6.22.3",
