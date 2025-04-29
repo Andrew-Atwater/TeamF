@@ -11,6 +11,7 @@ import AddTransaction from './pages/AddTransaction';
 import CostCalculator from './pages/CostCalculator';
 import Reports from './pages/Reports';
 import Accounts from './pages/Accounts';
+import Calendar from './pages/Calendar';
 
 const App: React.FC = () => {
   const [user, loading] = useAuthState(auth);
@@ -30,6 +31,8 @@ const App: React.FC = () => {
       <Route path="/cost-calculator" element={<CostCalculator />} />
       <Route path="/reports" element={user ? <Reports /> : <Navigate to="/login" replace />} />
       <Route path="/accounts" element={user ? <Accounts /> : <Navigate to="/login" replace />} />
+      <Route path="/calendar" element={user ? <Calendar /> : <Navigate to="/login" replace />} />
+
     </Routes>
   );
 };
