@@ -171,7 +171,7 @@ const Accounts: React.FC = () => {
                           startIcon={<EditIcon />}
                           onClick={() => handleEditClick(account)}
                         >
-                          Edit
+                          Do Nothing
                         </Button>
                       </Box>
                     </Box>
@@ -198,7 +198,7 @@ const Accounts: React.FC = () => {
 
           {/* Edit Account Dialog */}
           <Dialog open={isEditDialogOpen} onClose={() => setIsEditDialogOpen(false)} maxWidth="sm" fullWidth>
-            <DialogTitle>Edit Account Balance</DialogTitle>
+            <DialogTitle>Dump Account Balance</DialogTitle>
             <DialogContent>
               {selectedAccount && (
                 <>
