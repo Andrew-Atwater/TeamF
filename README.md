@@ -1,5 +1,5 @@
 # TeamF (Team Farhan)
-COS420 Financial Organization Project!
+COS420 Financial Organization Project
 
 https://farhan-financial-planner.web.app/
 
@@ -29,7 +29,7 @@ MEMBERS:
 6) Alex Picard (Developer #4)
 
 KANBAN CHART:
-https://app.worklenz.com/worklenz/projects/dc561aac-27a0-44bf-a70a-ffdb54e8f674?tab=tasks-list&pinned_tab=tasks-list
+UPDATED KANBAN (NOW USING GITHUB ISSUES) https://github.com/Andrew-Atwater/TeamF/issues
 
 SYSTEM REQUIREMENT SPECIFICATION DOCUMENT:
 https://docs.google.com/document/d/1bMdSQifJXM5QYvslw5x0TamEnEZmEueSToP99LMPEZM/edit?tab=t.0
