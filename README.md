@@ -1,5 +1,5 @@
 # TeamF (Team Farhan)
-COS420 Financial Organization Project!
+COS420 Financial Planner Project
 
 https://farhan-financial-planner.web.app/
 
