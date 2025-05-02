@@ -40,6 +40,9 @@ https://docs.google.com/document/d/1O-iKiveWH0owMYvlDRei5z7f5wiFRJXMLq1TQ0pnisY/
 SYSTEM ARCHITECTURE DESIGN DOCUMENT:
 https://docs.google.com/document/d/1hPAy1oTMAwuhAp08_11dK2DpYicO5mMK90aq0h6dyes/edit?tab=t.0
 
+DETAILED TECHNICAL DESIGN DOCUMENT:
+https://docs.google.com/document/d/1ON315KI1rWC24SKGQv5vbvir5bWpHsvmmtD_cN2jJus/edit?tab=t.0
+
 WEEKLY MEETING TIMES: 
 1) After class on Tuesdays (4:45-5:45PM) in Ferland Hall.
 2) Saturday afternoons (1:00-2:00PM) at Fogler Library.
