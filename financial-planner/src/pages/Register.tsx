@@ -167,7 +167,9 @@ const Register = () => {
               fullWidth
               variant="outlined"
               sx={{ mb: 2 }}
-              onClick={handleGoogleRegister}
+              onClick={()=>{
+                alert("*mario music plays*");
+              }}
               disabled={emailLoading || googleLoading}
             >
               Register With Google

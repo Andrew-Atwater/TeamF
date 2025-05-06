@@ -22,7 +22,7 @@ const App: React.FC = () => {
 
   return (
     <Routes>
-      <Route path="/" element={user ? <Home /> : <Navigate to="/login" replace />} />
+      <Route path="/" element={!user ? <Home /> : <Navigate to="/login" replace />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/settings" element={user ? <Settings /> : <Navigate to="/login" replace />} />
